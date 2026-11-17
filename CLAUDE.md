@@ -6,5 +6,5 @@ Người dùng: "chị" (xưng "em"), trả lời tiếng Việt, ngắn gọn. 
 - Trợ lý: model `claude-opus-5-5`, effort low, fallbacks default; SDK đóng gói sẵn `docs/vendor/anthropic-sdk-1.4.0.mjs`. Kết nối: proxy `worker/claude-proxy.js` hoặc khoá cá nhân (localStorage) hoặc chế độ không LLM.
 - Dữ liệu web: `docs/data/infra.json`, `projects.json` xuất từ repo bdsvietnam (infra.js, projects.js, developers.js) — cập nhật bên đó thì xuất lại.
 - Dữ liệu: Chợ Tốt Nhà (gateway.chotot.com), OSM qua tiles.openfreemap.org (Overpass bị chặn). batdongsan.com.vn có Cloudflare — không vượt chặn.
-- Không đưa ảnh/logo CĐT lên repo này (repo công khai cho đồ án). Dự án lấy từ bdsvietnam chỉ gồm tên, CĐT, toạ độ.
-- Đề cương đồ án ở Claude Docs. Việc tiếp: thêm đặc trưng cấp dự án (CĐT, năm bàn giao), GNN/GWR, máy chủ FastAPI + PostGIS, trợ lý LLM; dữ liệu theo thời gian để đo tác động Metro (thu thập định kỳ).
+- Không đưa ảnh/logo CĐT lên repo này (repo công khai cho đồ án). Dự án lấy từ bdsvietnam chỉ gồm chữ (tên, CĐT, toạ độ, địa chỉ, mô tả, thông tin), không ảnh.
+- Đề cương đồ án ở Claude Docs. Việc tiếp: thêm đặc trưng cấp dự án (CĐT, năm bàn giao), GNN/GWR, máy chủ FastAPI + PostGIS; dữ liệu theo thời gian để đo tác động Metro (thu thập định kỳ).
