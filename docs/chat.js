@@ -140,6 +140,7 @@ function md(s) { // markdown tối giản, an toàn
 }
 function add(cls, html) { const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; $("#msgs").append(d); $("#msgs").scrollTop = 1e9; return d; }
 function renderMode() {
+  if (!$("#chatMode")) return;
   $("#chatMode").innerHTML = {offline: "Chế độ: <b>không dùng LLM</b> — hiểu câu hỏi đơn giản. Bấm Cài đặt để kết nối Claude.",
     key: "Chế độ: <b>Claude (khoá API trên máy này)</b>", proxy: "Chế độ: <b>Claude qua máy chủ trung gian</b>"}[cfg.mode];
 }
@@ -217,6 +218,7 @@ async function askOffline(q) {
 /* ================= gửi câu hỏi ================= */
 async function ask(q) {
   q = q.trim(); if (!q || busy) return;
+  if (q === "/caidat") { $("#askInput").value = ""; openSettings(); return; }
   busy = true; $("#askBtn").disabled = true; $("#askInput").value = "";
   add("u", A().esc(q)); history.push({role: "user", content: q}); renderSuggest();
   const wait = add("a", '<span class="dots"><i></i><i></i><i></i></span>');
@@ -235,10 +237,12 @@ $("#askInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.sh
 
 /* ================= cài đặt ================= */
 const dlg = $("#chatSettings");
-$("#chatSettingsBtn").onclick = () => {
+function openSettings() {
   dlg.querySelectorAll("input[name=cm]").forEach(r => r.checked = r.value === cfg.mode);
   $("#apiKey").value = cfg.key; $("#proxyUrl").value = cfg.proxy; dlg.showModal();
-};
+}
+// Cài đặt ẩn: mở web với #caidat hoặc gõ /caidat trong ô chat
+if (location.hash === "#caidat") { window.APP?.setTab?.("chat"); openSettings(); }
 dlg.addEventListener("close", () => {
   if (dlg.returnValue !== "ok") return;
   const mode = dlg.querySelector("input[name=cm]:checked")?.value || "offline";

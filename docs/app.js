@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611171530";
+const V = "?v=202611171630";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -89,10 +89,10 @@ function gridFC() {
 const ramp = (prop, stops, cols) => { const e = ["interpolate", ["linear"], ["get", prop]]; stops.forEach((s, i) => e.push(s, cols[i])); return e; };
 function setMode(m) {
   const price = m === "p", stops = price ? PRICE_STOPS : EFF_STOPS, cols = price ? PRICE_COL : EFF_COL;
-  map.setPaintProperty("grid", "fill-color", ramp(m, stops, cols));
+  map.setPaintProperty("grid", "fill-extrusion-color", ramp(m, stops, cols));
   $("#lgBar").style.background = `linear-gradient(90deg,${cols.join(",")})`;
   $("#lgTicks").innerHTML = stops.map(s => `<span>${price ? s : (s > 0 ? "+" : "") + s + "%"}</span>`).join("");
-  $("#lgCap").textContent = price ? `Căn tham chiếu ${D.model.ref.size} m², ${D.model.ref.rooms} PN · triệu đồng/m²` : "Mức tăng/giảm giá so với giá nền (SHAP)";
+  $("#lgCap").textContent = (price ? `Căn tham chiếu ${D.model.ref.size} m², ${D.model.ref.rooms} PN · triệu đồng/m²` : "Mức tăng/giảm giá so với giá nền (SHAP)") + " · cột càng cao giá càng đắt";
 }
 
 /* ================= tab Dự án ================= */
@@ -102,18 +102,22 @@ function filteredProjects() {
   const q = norm(state.q);
   return D.prj.projects.filter(p => (state.dev === "all" || p.d === state.dev) && (!q || norm(p.n + " " + p.addr).includes(q)));
 }
+const pjRow = p => { const d = devOf(p); return `<button class="item" data-id="${p.id}"><span class="dot" style="background:${d.c}">${esc(d.s)}</span><b>${esc(p.n)}</b><small>${p.addr ? esc(p.addr) : esc(d.n)}</small></button>`; };
 function renderProjects() {
-  const ps = filteredProjects(), cnt = {};
-  D.prj.projects.forEach(p => cnt[p.d] = (cnt[p.d] || 0) + 1);
-  $("#pjCount").textContent = `${ps.length} dự án khu vực TP.HCM và lân cận`;
-  $("#devChips").innerHTML = `<button class="chip ${state.dev === "all" ? "on" : ""}" data-d="all">Tất cả</button>` +
-    Object.entries(D.prj.dev).filter(([k]) => cnt[k]).map(([k, v]) => `<button class="chip ${state.dev === k ? "on" : ""}" data-d="${k}"><i style="background:${v.c}"></i>${esc(v.n)} · ${cnt[k]}</button>`).join("");
-  $("#pjItems").innerHTML = ps.map(p => { const d = devOf(p);
-    return `<button class="item" data-id="${p.id}"><span class="dot" style="background:${d.c}">${esc(d.s)}</span><b>${esc(p.n)}</b><small>${esc(d.n)}${p.addr ? " · " + esc(p.addr) : ""}</small></button>`; }).join("");
+  const cnt = {}; D.prj.projects.forEach(p => cnt[p.d] = (cnt[p.d] || 0) + 1);
+  $("#pjCount").textContent = `${D.prj.projects.length} dự án của ${Object.keys(cnt).length} chủ đầu tư · bấm vào chủ đầu tư để xem dự án`;
+  if (state.q) {
+    const ps = filteredProjects();
+    $("#devAcc").innerHTML = ps.length ? ps.map(pjRow).join("") : `<div class="empty">Không có dự án khớp “${esc(state.q)}”.</div>`;
+  } else {
+    $("#devAcc").innerHTML = Object.entries(D.prj.dev).filter(([k]) => cnt[k]).map(([k, v]) => {
+      const open = state.dev === k;
+      return `<div class="dev ${open ? "open" : ""}"><button class="dev-h" data-d="${k}"><span class="dot" style="background:${v.c}">${esc(v.s)}</span><b>${esc(v.n)}</b><small>${cnt[k]} dự án</small><i>▾</i></button>
+        ${open ? `<div class="dev-b">${D.prj.projects.filter(p => p.d === k).map(pjRow).join("")}${v.web ? `<a class="dev-web" href="${esc(v.web)}" target="_blank" rel="noopener">Web ${esc(v.n)} ↗</a>` : ""}</div>` : ""}</div>`; }).join("");
+  }
   if (map?.getLayer("pj")) {
-    const ids = ps.map(p => p.id);
-    map.setFilter("pj", ["in", ["get", "id"], ["literal", ids]]); map.setFilter("pj-t", ["in", ["get", "id"], ["literal", ids]]);
-    map.setFilter("pjp-f", ["in", ["get", "id"], ["literal", ids]]); map.setFilter("pjp-l", ["in", ["get", "id"], ["literal", ids]]);
+    const f = state.dev === "all" ? null : ["==", ["get", "dv"], state.dev];
+    ["pj", "pj-t", "pjp-f", "pjp-l"].forEach(id => map.setFilter(id, f));
   }
 }
 function fitPoints(pts, maxZoom = 14.5) {
@@ -134,14 +138,30 @@ function showProject(id) {
       ${(p.info || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : `<p class="desc">Thông tin dự án đang cập nhật.</p>`}
     <button class="btn" id="pjValue">Định giá chi tiết</button> ${p.web ? `<a class="btn alt" href="${esc(p.web)}" target="_blank" rel="noopener">Web chủ đầu tư ↗</a>` : ""}`;
-  $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); };
+  $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); stopOrbit(); };
   $("#pjValue").onclick = () => { setTab("price"); setPick(p.ll[0], p.ll[1], p.n, "Chủ đầu tư: " + esc(d.n)); };
   map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}});
-  map.flyTo({center: [p.ll[1], p.ll[0]], zoom: 15, duration: 1400});
+  stopOrbit(); window.metroStop?.();
+  map.flyTo({center: [p.ll[1], p.ll[0]], zoom: p.poly ? 15.4 : 16.2, pitch: 60, bearing: map.getBearing() - 30, duration: 1800, essential: true});
+  map.once("moveend", () => startOrbit());
 }
-$("#devChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.dev = b.dataset.d; renderProjects(); fitPoints(filteredProjects().map(p => p.ll)); });
-$("#pjSearch").addEventListener("input", e => { state.q = e.target.value; renderProjects(); });
-$("#pjItems").addEventListener("click", e => { const b = e.target.closest(".item"); if (b) showProject(b.dataset.id); });
+$("#devAcc").addEventListener("click", e => {
+  const it = e.target.closest(".item"); if (it) { showProject(it.dataset.id); return; }
+  const h = e.target.closest(".dev-h"); if (!h) return;
+  state.dev = state.dev === h.dataset.d ? "all" : h.dataset.d; renderProjects();
+  stopOrbit(); fitPoints((state.dev === "all" ? D.prj.projects : filteredProjects()).map(p => p.ll), 14);
+});
+$("#pjSearch").addEventListener("input", e => { state.q = e.target.value.trim(); renderProjects(); });
+
+/* ================= xoay bản đồ 3D ================= */
+let orbitRAF = null, orbitLast = 0;
+function startOrbit(speed = 4) { // độ/giây
+  stopOrbit(); orbitLast = performance.now();
+  const step = now => { const dt = (now - orbitLast) / 1000; orbitLast = now; map.setBearing((map.getBearing() + speed * dt) % 360); orbitRAF = requestAnimationFrame(step); };
+  orbitRAF = requestAnimationFrame(step);
+}
+function stopOrbit() { cancelAnimationFrame(orbitRAF); orbitRAF = null; }
+window.stopOrbit = stopOrbit;
 
 /* ================= tab Metro ================= */
 function renderMetro() {
@@ -154,30 +174,20 @@ function renderMetro() {
 }
 function lineCoords(k) { const pts = []; if (k === "m1") D.metro.line.forEach(c => pts.push([c[1], c[0]]));
   D.infra.metro.filter(m => m.line === k).forEach(m => m.c.forEach(c => pts.push([c[1], c[0]]))); return pts; }
-function selectLine(k) {
-  state.line = state.line === k ? null : k; renderMetro();
-  const op = state.line ? ["case", ["==", ["get", "l"], state.line], 1, .18] : 1;
+function highlightLine(k) {
+  state.line = k; renderMetro();
+  const op = k ? ["case", ["==", ["get", "l"], k], 1, .18] : 1;
   ["im-build", "im-plan"].forEach(id => map.setPaintProperty(id, "line-opacity", op));
-  map.setPaintProperty("metro-l", "line-opacity", !state.line || state.line === "m1" ? 1 : .25);
-  if (state.line) fitPoints(lineCoords(state.line), 13);
 }
+function selectLine(k) {
+  stopOrbit();
+  if (state.line === k) { window.metroStop?.(); return; }
+  highlightLine(k);
+  if (window.METRO3D) window.METRO3D.play(k); else fitPoints(lineCoords(k), 13);
+}
+window.addEventListener("metro-stop", () => { if (state.line) highlightLine(null); });
 $("#metroLines").addEventListener("click", e => { const b = e.target.closest(".line-item"); if (b) selectLine(b.dataset.l); });
-$("#m1Stations").addEventListener("click", e => { const b = e.target.closest(".item"); if (!b) return; const [la, lo] = b.dataset.s.split(",").map(Number); map.flyTo({center: [lo, la], zoom: 14.5, duration: 1200}); });
-// tàu chạy trên tuyến số 1
-let trainRAF = null;
-function trainLoop() {
-  const L = D.metro.line, seg = []; let tot = 0;
-  for (let i = 1; i < L.length; i++) { const d = dist(L[i - 1][1], L[i - 1][0], L[i][1], L[i][0]); seg.push(d); tot += d; }
-  const T = 40000;
-  const step = now => {
-    let k = (now % (2 * T)) / T; if (k > 1) k = 2 - k; let target = k * tot, i = 0;
-    while (i < seg.length - 1 && target > seg[i]) { target -= seg[i]; i++; }
-    const f = seg[i] ? target / seg[i] : 0, a = L[i], b = L[i + 1] || a;
-    map.getSource("train")?.setData({type: "Feature", geometry: {type: "Point", coordinates: [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]}});
-    trainRAF = requestAnimationFrame(step);
-  };
-  trainRAF = requestAnimationFrame(step);
-}
+$("#m1Stations").addEventListener("click", e => { const b = e.target.closest(".item"); if (!b) return; window.metroStop?.(); const [la, lo] = b.dataset.s.split(",").map(Number); map.flyTo({center: [lo, la], zoom: 16, pitch: 60, duration: 1400}); map.once("moveend", () => startOrbit()); });
 
 /* ================= kết quả tìm kiếm (dùng chung cho Hỏi đáp) ================= */
 function showHits(points, fit = true) { // points: [{lat, lon, label}]
@@ -187,10 +197,10 @@ function showHits(points, fit = true) { // points: [{lat, lon, label}]
 
 /* ================= điều hướng tab ================= */
 const LAYERS = {
-  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s"],
-  metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "train", "pj"],
+  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d"],
+  metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d"],
   price: ["grid", "ls", "pj", "metro-l", "metro-s"],
-  chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t"],
+  chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d"],
 };
 const ALL = [...new Set(Object.values(LAYERS).flat())];
 function setTab(t) {
@@ -201,7 +211,8 @@ function setTab(t) {
   if (t === "price") { if (!$("#lyListings").checked) map.setLayoutProperty("ls", "visibility", "none"); if (!$("#lyProjects").checked) map.setLayoutProperty("pj", "visibility", "none"); }
   map.setLayoutProperty("pick", "visibility", t === "price" || t === "projects" ? "visible" : "none");
   map.setPaintProperty("pj", "circle-radius", t === "metro" ? 4 : 6);
-  cancelAnimationFrame(trainRAF); if (t === "metro") trainLoop();
+  if (t !== "metro") window.metroStop?.();
+  if (t === "price") { stopOrbit(); map.easeTo({pitch: 50, zoom: Math.min(map.getZoom(), 12), duration: 900}); }
   setTimeout(() => map.resize(), 50);
   window.dispatchEvent(new CustomEvent("tab", {detail: t}));
 }
@@ -218,14 +229,21 @@ async function boot() {
   $("#mode").innerHTML = MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
   $("#disc").innerHTML = `Mô hình học từ <b>${D.model.n.toLocaleString("vi-VN")}</b> tin rao bán căn hộ (${esc(D.model.collected)}), sai số trung bình ${fmt(D.model.results.at(-1)["MAPE_%"])}%. Giá tin rao là giá chào bán, không phải giá giao dịch. Kết quả chỉ để tham khảo.`;
   renderProjects(); renderMetro();
-  map = new maplibregl.Map({container: "map", style: "https://tiles.openfreemap.org/styles/positron", center: [106.71, 10.79], zoom: 11.3, attributionControl: false});
+  map = new maplibregl.Map({container: "map", style: "https://tiles.openfreemap.org/styles/positron", center: [106.715, 10.785], zoom: 12.2, pitch: 55, bearing: -20, maxPitch: 75, attributionControl: false});
   map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: "Tin rao: Chợ Tốt Nhà"}));
-  map.addControl(new maplibregl.NavigationControl({showCompass: false}), "bottom-right");
+  map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), "bottom-right");
+  ["mousedown", "touchstart", "wheel"].forEach(ev => map.on(ev, stopOrbit));
   map.on("load", () => {
     const first = map.getStyle().layers.find(l => l.type === "symbol")?.id;
     // lưới giá
     map.addSource("grid", {type: "geojson", data: gridFC()});
-    map.addLayer({id: "grid", type: "fill", source: "grid", paint: {"fill-opacity": ["interpolate", ["linear"], ["zoom"], 10, .62, 15, .35], "fill-outline-color": "rgba(255,255,255,.25)"}}, first);
+    // nhà 3D (OpenStreetMap)
+    map.addLayer({id: "b3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 13,
+      paint: {"fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["get", "render_height"], 6], 0, "#efe7da", 60, "#e2d6c2", 150, "#d2c2a6"],
+        "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13, 0, 14, ["coalesce", ["get", "render_height"], 6]],
+        "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0], "fill-extrusion-opacity": .9}});
+    // cột giá 3D: chiều cao theo giá/m² của căn tham chiếu
+    map.addLayer({id: "grid", type: "fill-extrusion", source: "grid", paint: {"fill-extrusion-height": ["*", ["get", "p"], 4], "fill-extrusion-base": 0, "fill-extrusion-opacity": .82}});
     // vành đai + metro quy hoạch
     const I = D.infra;
     map.addSource("rings", {type: "geojson", data: FC(I.roads.map(r => ({type: "Feature", properties: {n: r.name, st: r.st}, geometry: {type: "LineString", coordinates: r.c}})))});
@@ -240,14 +258,12 @@ async function boot() {
     map.addLayer({id: "metro-l", type: "line", source: "metro", filter: ["==", "$type", "LineString"], layout: {"line-cap": "round", "line-join": "round"}, paint: {"line-color": I.color.m1 || "#1c75bc", "line-width": ["interpolate", ["linear"], ["zoom"], 9, 2.5, 14, 6]}});
     map.addLayer({id: "metro-s", type: "circle", source: "metro", filter: ["==", "$type", "Point"], paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3, 15, 6], "circle-color": "#fff", "circle-stroke-color": I.color.m1 || "#1c75bc", "circle-stroke-width": 2}});
     map.addLayer({id: "metro-sl", type: "symbol", source: "metro", filter: ["==", "$type", "Point"], minzoom: 11.5, layout: {"text-field": ["get", "n"], "text-size": 11.5, "text-offset": [0, 1.1], "text-anchor": "top", "text-font": ["Noto Sans Regular"]}, paint: {"text-color": "#1c5a96", "text-halo-color": "#fff", "text-halo-width": 1.4}});
-    map.addSource("train", {type: "geojson", data: FC([])});
-    map.addLayer({id: "train", type: "circle", source: "train", paint: {"circle-radius": 7, "circle-color": "#1c75bc", "circle-stroke-color": "#fff", "circle-stroke-width": 3}});
     // tin rao
     map.addSource("ls", {type: "geojson", data: FC(D.list.map(l => ({type: "Feature", properties: {p: l[2], s: l[3], n: l[4] || ""}, geometry: {type: "Point", coordinates: [l[1], l[0]]}})))});
     map.addLayer({id: "ls", type: "circle", source: "ls", paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 1.6, 15, 4.5], "circle-color": ramp("p", PRICE_STOPS, PRICE_COL), "circle-stroke-color": "#3b2a14", "circle-stroke-width": .6}});
     // dự án
-    const pf = D.prj.projects.map(p => ({type: "Feature", properties: {id: p.id, n: p.n, c: devOf(p).c, d: devOf(p).n}, geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}}));
-    map.addSource("pjp", {type: "geojson", data: FC(D.prj.projects.filter(p => p.poly).map(p => ({type: "Feature", properties: {id: p.id, c: devOf(p).c}, geometry: p.poly})))});
+    const pf = D.prj.projects.map(p => ({type: "Feature", properties: {id: p.id, n: p.n, c: devOf(p).c, d: devOf(p).n, dv: p.d}, geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}}));
+    map.addSource("pjp", {type: "geojson", data: FC(D.prj.projects.filter(p => p.poly).map(p => ({type: "Feature", properties: {id: p.id, c: devOf(p).c, dv: p.d}, geometry: p.poly})))});
     map.addLayer({id: "pjp-f", type: "fill", source: "pjp", paint: {"fill-color": ["get", "c"], "fill-opacity": .12}}, first);
     map.addLayer({id: "pjp-l", type: "line", source: "pjp", paint: {"line-color": ["get", "c"], "line-width": 1.5, "line-opacity": .7}});
     map.addSource("pj", {type: "geojson", data: FC(pf)});
@@ -259,7 +275,7 @@ async function boot() {
     map.addLayer({id: "hits-t", type: "symbol", source: "hits", minzoom: 11, layout: {"text-field": ["get", "t"], "text-size": 11.5, "text-offset": [0, 1.1], "text-anchor": "top", "text-font": ["Noto Sans Regular"], "text-max-width": 12}, paint: {"text-color": "#3b2a14", "text-halo-color": "#fff", "text-halo-width": 1.4}});
     map.addSource("pick", {type: "geojson", data: FC([])});
     map.addLayer({id: "pick", type: "circle", source: "pick", paint: {"circle-radius": 10, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#3b2a14", "circle-stroke-width": 3}});
-    setMode("p"); renderProjects(); setTab(state.tab);
+    setMode("p"); renderProjects(); setTab(state.tab); startOrbit(2.5);
     map.on("click", e => {
       const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0];
       if (state.tab === "projects") { if (f) showProject(f.properties.id); return; }
@@ -275,5 +291,5 @@ async function boot() {
   });
   if (matchMedia("(max-width:820px)").matches) $("#layers").open = false;
 }
-window.APP = {D, valuate, spatial, nearestStation, dist, norm, esc, fmt, showHits, setTab, setPick, fitPoints, showProject, get map() { return map; }};
+window.APP = {D, startOrbit, stopOrbit, valuate, spatial, nearestStation, dist, norm, esc, fmt, showHits, setTab, setPick, fitPoints, showProject, get map() { return map; }};
 boot();

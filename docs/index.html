@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
-<link rel="stylesheet" href="app.css?v=202611171530">
+<link rel="stylesheet" href="app.css?v=202611171630">
 </head>
 <body data-tab="projects">
 <header class="top">
@@ -30,7 +30,7 @@
   <h4>Tô bản đồ theo</h4>
   <select id="mode"></select>
   <label><input type="checkbox" id="lyListings" checked> Tin rao thực tế</label>
-  <label><input type="checkbox" id="lyProjects" checked> Dự án chủ đầu tư lớn</label>
+  <label><input type="checkbox" id="lyProjects" checked> Dự án TP.HCM</label>
   <div class="legend"><div class="bar" id="lgBar"></div><div class="ticks" id="lgTicks"></div><div class="cap" id="lgCap"></div></div>
 </details>
 <div class="hint" id="hint">Bấm vào bất kỳ điểm nào trên bản đồ để định giá</div>
@@ -39,11 +39,10 @@
   <!-- DỰ ÁN -->
   <section class="tab" id="tab-projects">
     <div id="pjList">
-      <h2>Dự án chủ đầu tư lớn</h2>
+      <h2>Dự án TP.HCM</h2>
       <div class="sub" id="pjCount"></div>
-      <div class="chips" id="devChips"></div>
       <input class="search" id="pjSearch" placeholder="Tìm tên dự án, địa chỉ…">
-      <div class="list" id="pjItems"></div>
+      <div class="list" id="devAcc"></div>
     </div>
     <div id="pjDetail" hidden></div>
   </section>
@@ -51,7 +50,7 @@
   <!-- METRO -->
   <section class="tab" id="tab-metro">
     <h2>Metro TP.HCM</h2>
-    <div class="sub">Tuyến số 1 đang vận hành (nét liền); các tuyến quy hoạch nét đứt, đoạn đang thi công đậm hơn.</div>
+    <div class="sub">Bấm một tuyến để xem tàu 3D chạy theo lộ trình (cầu cạn, đoạn ngầm, camera bám tàu). Bấm lại để dừng.</div>
     <div class="list" id="metroLines"></div>
     <div class="sec"><h3>Ga Metro số 1</h3><div class="list compact" id="m1Stations"></div></div>
     <div class="disc">Tiến độ tổng hợp từ báo chí (11/2026). Một số hướng tuyến quy hoạch là ước tính.</div>
@@ -78,11 +77,6 @@
 
   <!-- HỎI ĐÁP -->
   <section class="tab chat" id="tab-chat">
-    <div class="chat-head">
-      <h2>Hỏi đáp</h2>
-      <button class="ghost" id="chatSettingsBtn" title="Cài đặt kết nối">Cài đặt</button>
-    </div>
-    <div class="chat-mode" id="chatMode"></div>
     <div class="msgs" id="msgs"></div>
     <div class="suggest" id="suggest"></div>
     <form class="ask" id="askForm">
@@ -107,7 +101,8 @@
 </dialog>
 
 <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script src="app.js?v=202611171530"></script>
-<script type="module" src="chat.js?v=202611171530"></script>
+<script src="app.js?v=202611171630"></script>
+<script src="metro3d.js?v=202611171630"></script>
+<script type="module" src="chat.js?v=202611171630"></script>
 </body>
 </html>
