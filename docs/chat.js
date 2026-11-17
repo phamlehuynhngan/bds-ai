@@ -37,7 +37,7 @@ const TOOLS = [
 const SYSTEM = `Bạn là trợ lý của web "BĐS AI" — bản đồ dự án, Metro và định giá căn hộ TP.HCM (đồ án tốt nghiệp ngành AI).
 - Luôn trả lời bằng tiếng Việt, ngắn gọn, đi thẳng vào câu hỏi; dùng gạch đầu dòng khi liệt kê.
 - Mọi con số về giá, dự án, Metro phải lấy từ kết quả công cụ; không tự đoán. Thiếu dữ liệu thì nói rõ.
-- Giá tin rao là giá chào bán (Chợ Tốt Nhà, 11/2026), không phải giá giao dịch. Giá mô hình có sai số trung bình khoảng 24%, nên nêu khoảng tham khảo.
+- Giá tin rao là giá chào bán (Chợ Tốt Nhà, 11/2026), không phải giá giao dịch. Với dự án, ưu tiên nêu giá thị trường tham khảo kèm loại giá và nguồn; giá ước tính AI = giá thị trường dự án × hệ số căn hộ. Luôn nêu khoảng tham khảo.
 - Kết quả công cụ đã được đánh dấu trên bản đồ; có thể nhắc người dùng xem bản đồ.
 - Không tư vấn đầu tư hay cam kết lợi nhuận. Dữ liệu chỉ phủ TP.HCM và vùng lân cận.`;
 
@@ -46,6 +46,13 @@ function projectByName(name) {
   const q = A().norm(name); if (!q) return null;
   const ps = A().D.prj.projects;
   return ps.find(p => A().norm(p.n) === q) || ps.find(p => A().norm(p.n).includes(q)) || ps.find(p => q.includes(A().norm(p.n)));
+}
+function giaDuAn(p) {
+  const pp = A().D.pp?.[p.id] || {};
+  if (pp.kind === "thap_tang") return {gia: pp.note};
+  const m = A().market(p.id), r = A().valuate(p.ll[0], p.ll[1], {}, p.id);
+  return {gia_thi_truong_trieu_m2: m ? `${m.lo}–${m.hi}` : null, loai_gia: m ? m.note : "Chưa có giá thị trường; chỉ ước tính theo vị trí", nguon_gia: m?.src || (m ? "Chợ Tốt Nhà" : null),
+    uoc_tinh_can_70m2_2pn_trieu_m2: r.gia_trieu_m2};
 }
 const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 const TOOL_IMPL = {
@@ -87,11 +94,12 @@ const TOOL_IMPL = {
     A().showHits(rs.map(p => ({lat: p.ll[0], lon: p.ll[1], label: p.n})));
     return {so_du_an: rs.length, du_an: rs.slice(0, 25).map(p => { const s = nearestStation(p.ll[0], p.ll[1]);
       return {ten: p.n, chu_dau_tu: D.prj.dev[p.d]?.n, dia_chi: p.addr || null, ga_metro_1_gan_nhat: s.n, km_toi_ga: +s.d.toFixed(1),
-        gia_mo_hinh_trieu_m2_can_70m2: valuate(p.ll[0], p.ll[1]).gia_trieu_m2, thong_tin: (p.info || []).slice(0, 3).map(x => x.join(": "))}; })};
+        ...giaDuAn(p), thong_tin: (p.info || []).slice(0, 3).map(x => x.join(": "))}; })};
   },
   async dinh_gia(i) {
-    let lat = i.lat, lon = i.lon, ten = null;
-    if (i.ten_du_an) { const p = projectByName(i.ten_du_an); if (p) { lat = p.ll[0]; lon = p.ll[1]; ten = p.n; } else if (!i.dia_chi) i.dia_chi = i.ten_du_an; }
+    let lat = i.lat, lon = i.lon, ten = null, pid = null;
+    if (i.ten_du_an) { const p = projectByName(i.ten_du_an); if (p) { lat = p.ll[0]; lon = p.ll[1]; ten = p.n; pid = p.id; } else if (!i.dia_chi) i.dia_chi = i.ten_du_an; }
+    if (pid && A().D.pp?.[pid]?.kind === "thap_tang") return {vi_tri: ten, ghi_chu: A().D.pp[pid].note};
     if ((lat == null || lon == null) && i.dia_chi) { const g = await TOOL_IMPL.tim_dia_diem({ten: i.dia_chi}); if (g.lat) { lat = g.lat; lon = g.lon; ten = g.ten; } else return {loi: "Không tìm thấy địa điểm"}; }
     if (lat == null || lon == null) return {loi: "Cần tên dự án, địa chỉ hoặc toạ độ"};
     const a = {};
@@ -100,7 +108,7 @@ const TOOL_IMPL = {
     if (i.phap_ly) a.property_legal_document = {so_hong: 6, hdmb: 5, cho_so: 2}[i.phap_ly];
     if (i.da_ban_giao != null) a.property_status = i.da_ban_giao ? 2 : 1;
     A().showHits([{lat, lon, label: ten || "Điểm định giá"}]);
-    return {vi_tri: ten, ...A().valuate(lat, lon, a)};
+    return {vi_tri: ten, ...A().valuate(lat, lon, a, pid)};
   },
   thong_tin_metro(i) {
     const {D, dist} = A(), I = D.infra, ks = i.tuyen ? [i.tuyen] : Object.keys(I.info);
@@ -193,11 +201,13 @@ async function askOffline(q) {
   const rooms = n.match(/(\d)\s*(pn|phong ngu)/);
   if (/dinh gia|gia bao nhieu|bao nhieu tien|gia .* tai/.test(n) && pj) {
     const r = await TOOL_IMPL.dinh_gia({ten_du_an: pj.n, dien_tich: area ? num(area[1]) : undefined, phong_ngu: rooms ? +rooms[1] : undefined});
-    return show(`Định giá tại ${A().esc(pj.n)}`, `<p>≈ <b>${A().fmt(r.gia_trieu_m2)} triệu/m²</b>, tổng ≈ <b>${A().fmt(r.tong_ty, 2)} tỷ</b> cho ${r.dien_tich} m² (khoảng ${A().fmt(r.khoang_tham_khao_trieu_m2[0])}–${A().fmt(r.khoang_tham_khao_trieu_m2[1])} triệu/m²).</p><p>Yếu tố chính: ${r.yeu_to.slice(0, 3).map(y => `${A().esc(y.ten)} ${y.anh_huong_pct > 0 ? "+" : ""}${y.anh_huong_pct}%`).join("; ")}.</p>${r.tin_rao_1km ? `<p>${r.tin_rao_1km} tin rao trong 1 km, trung vị ${A().fmt(r.trung_vi_tin_rao_1km)} triệu/m².</p>` : ""}`);
+    if (r.ghi_chu) return show(A().esc(pj.n), `<p>${A().esc(r.ghi_chu)}</p>`);
+    const g = r.gia_thi_truong_du_an;
+    return show(`Định giá tại ${A().esc(pj.n)}`, `<p>≈ <b>${A().fmt(r.gia_trieu_m2)} triệu/m²</b>, tổng ≈ <b>${A().fmt(r.tong_ty, 2)} tỷ</b> cho ${r.dien_tich} m² (khoảng ${A().fmt(r.khoang_tham_khao_trieu_m2[0])}–${A().fmt(r.khoang_tham_khao_trieu_m2[1])} triệu/m²).</p>${g ? `<p>Giá thị trường tham khảo: <b>${A().fmt(g.tu, 0)}–${A().fmt(g.den, 0)} triệu/m²</b> (${A().esc(g.ghi_chu)}).</p>` : ""}<p>Yếu tố chính: ${r.yeu_to.slice(0, 3).map(y => `${A().esc(y.ten)} ${y.anh_huong_pct > 0 ? "+" : ""}${y.anh_huong_pct}%`).join("; ")}.</p>${r.tin_rao_1km ? `<p>${r.tin_rao_1km} tin rao trong 1 km, trung vị ${A().fmt(r.trung_vi_tin_rao_1km)} triệu/m².</p>` : ""}`);
   }
   if (/du an/.test(n) || dev && !/can ho|tin rao|duoi|tren/.test(n)) {
     const r = TOOL_IMPL.tim_du_an({chu_dau_tu: dev ? A().D.prj.dev[dev].n : undefined, gan_metro_km: /gan (ga )?metro/.test(n) ? 1.5 : undefined});
-    return show(`${r.so_du_an} dự án`, "<ul>" + r.du_an.slice(0, 12).map(p => `<li><b>${A().esc(p.ten)}</b> — ${A().esc(p.chu_dau_tu)}, ga ${A().esc(p.ga_metro_1_gan_nhat)} ${A().fmt(p.km_toi_ga)} km</li>`).join("") + "</ul>");
+    return show(`${r.so_du_an} dự án`, "<ul>" + r.du_an.slice(0, 12).map(p => `<li><b>${A().esc(p.ten)}</b> — ${A().esc(p.chu_dau_tu)}, ga ${A().esc(p.ga_metro_1_gan_nhat)} ${A().fmt(p.km_toi_ga)} km${p.gia_thi_truong_trieu_m2 ? `, giá ${p.gia_thi_truong_trieu_m2} tr/m²` : ""}</li>`).join("") + "</ul>");
   }
   const i = {};
   let m;

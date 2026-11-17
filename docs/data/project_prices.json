@@ -1,0 +1,294 @@
+{
+"one-central": {
+"kind": "du_kien",
+"lo": 650,
+"hi": 800,
+"mid": 725.0,
+"note": "Chưa công bố giá chính thức; mức dự kiến theo báo chí",
+"src": "https://vneconomy.vn/can-ho-sieu-sang-dat-co-xat-ra-mieng.htm"
+},
+"grand-marina": {
+"kind": "rao_ban",
+"lo": 423,
+"hi": 480,
+"mid": 451.5,
+"note": "Mở bán khoảng 18.000 USD/m²; tin rao thứ cấp 460–480 triệu/m²",
+"src": "https://nhadautu.vn/masterise-homes-ra-mat-can-ho-marriott-phien-ban-dac-biet-chua-den-450-trieu-m2-d97717.html"
+},
+"the-rivus": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"the-global-city": {
+"kind": "chotot",
+"mid": 122.5,
+"lo": 107.2,
+"hi": 125.9,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"masteri-cosmo-central": {
+"kind": "rao_ban",
+"lo": 108,
+"hi": 145,
+"mid": 126.5,
+"note": "Giá rao bán tổng hợp",
+"src": "https://batdongsan.com.vn/nha-dat-ban-masteri-cosmo-central"
+},
+"masteri-grand-view": {
+"kind": "rao_ban",
+"lo": 113,
+"hi": 146,
+"mid": 129.5,
+"note": "Giá rao bán tổng hợp",
+"src": "https://batdongsan.com.vn/nha-dat-ban-masteri-grand-view"
+},
+"masteri-park-place": {
+"kind": "rao_ban",
+"lo": 106,
+"hi": 138,
+"mid": 122.0,
+"note": "Giá rao bán tổng hợp",
+"src": "https://batdongsan.com.vn/ban-can-ho-chung-cu-masteri-park-place"
+},
+"lumiere-midtown": {
+"kind": "du_kien",
+"lo": 155,
+"hi": 185,
+"mid": 170.0,
+"note": "Bảng giá dự kiến 2025 quy đổi ~158–160 triệu/m²; tin rao đến ~185",
+"src": "https://thuviennhadat.vn/bat-dong-san/gia-ban-du-an-phan-khu-lumiere-midtown-bao-nhieu-15400.html"
+},
+"masteri-thao-dien": {
+"kind": "chotot",
+"mid": 115.7,
+"lo": 110.4,
+"hi": 124.1,
+"n": 8,
+"note": "Trung vị 8 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"masteri-an-phu": {
+"kind": "chotot",
+"mid": 107.0,
+"lo": 102.9,
+"hi": 109.9,
+"n": 4,
+"note": "Trung vị 4 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"lumiere-riverside": {
+"kind": "chotot",
+"mid": 154.3,
+"lo": 143.9,
+"hi": 178.8,
+"n": 7,
+"note": "Trung vị 7 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"masteri-millennium": {
+"kind": "chotot",
+"mid": 106.5,
+"lo": 97.7,
+"hi": 119.8,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"masteri-centre-point": {
+"kind": "chotot",
+"mid": 65.0,
+"lo": 56.4,
+"hi": 75.1,
+"n": 17,
+"note": "Trung vị 17 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"lumiere-boulevard": {
+"kind": "chotot",
+"mid": 61.6,
+"lo": 58.5,
+"hi": 71.6,
+"n": 11,
+"note": "Trung vị 11 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"metropole": {
+"kind": "rao_ban",
+"lo": 330,
+"hi": 448,
+"mid": 389.0,
+"note": "Báo cáo quý 1/2026; giao dịch thứ cấp 330–500 triệu/m²",
+"src": "https://24hmoney.vn/news/can-ho-o-thu-thiem-lap-mat-bang-gia-moi-c3a2788410.html"
+},
+"9-stellars": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"gateway-thao-dien": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"vh-golden-river": {
+"kind": "chotot",
+"mid": 216.0,
+"lo": 202.0,
+"hi": 227.7,
+"n": 15,
+"note": "Trung vị 15 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"vh-central-park": {
+"kind": "chotot",
+"mid": 119.8,
+"lo": 106.1,
+"hi": 128.6,
+"n": 35,
+"note": "Trung vị 35 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"gladia": {
+"kind": "so_cap",
+"lo": 72,
+"hi": 95,
+"mid": 83.5,
+"note": "Căn hộ Gladia Heights, giá chủ đầu tư/môi giới rao",
+"src": "https://batdongsan.com.vn/nha-dat-ban-gladia-heights"
+},
+"vh-grand-park": {
+"kind": "chotot",
+"mid": 45.3,
+"lo": 40.0,
+"hi": 54.1,
+"n": 130,
+"note": "Trung vị 130 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"vh-green-paradise": {
+"kind": "du_kien",
+"lo": 60,
+"hi": 75,
+"mid": 67.5,
+"note": "Căn hộ phân khu Imperia Green Paradise, giá tham khảo giai đoạn 1",
+"src": "https://cafeland.vn/du-an/imperia-green-paradise-phan-khu-can-ho-thuoc-vinhomes-green-paradise-tphcm-5328.html"
+},
+"kdh-privia": {
+"kind": "chotot",
+"mid": 64.7,
+"lo": 62.6,
+"hi": 65.8,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"kdh-lovera-vista": {
+"kind": "chotot",
+"mid": 48.3,
+"lo": 46.1,
+"hi": 50.0,
+"n": 20,
+"note": "Trung vị 20 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"kdh-safira": {
+"kind": "chotot",
+"mid": 62.4,
+"lo": 61.0,
+"hi": 63.4,
+"n": 9,
+"note": "Trung vị 9 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"kdh-verosa": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"kdh-merita": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"kdh-lucasta": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"kdh-mega-residence": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"kdh-jamona": {
+"kind": "chotot",
+"mid": 49.5,
+"lo": 48.2,
+"hi": 50.6,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"pl-dragon-hill-1": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"pl-dragon-hill-2": {
+"kind": "chotot",
+"mid": 60.0,
+"lo": 58.8,
+"hi": 62.4,
+"n": 16,
+"note": "Trung vị 16 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"pl-kim-long": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"pl-ngan-long": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"nl-mizuki": {
+"kind": "chotot",
+"mid": 59.3,
+"lo": 55.9,
+"hi": 62.9,
+"n": 57,
+"note": "Trung vị 57 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"nl-akari": {
+"kind": "chotot",
+"mid": 58.0,
+"lo": 53.1,
+"hi": 61.7,
+"n": 35,
+"note": "Trung vị 35 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"nl-waterpoint": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"nl-flora-novia": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"nl-flora-anh-dao": {
+"kind": "chotot",
+"mid": 58.3,
+"lo": 57.7,
+"hi": 59.6,
+"n": 4,
+"note": "Trung vị 4 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"nl-flora-fuji": {
+"kind": "chotot",
+"mid": 59.3,
+"lo": 57.7,
+"hi": 59.6,
+"n": 4,
+"note": "Trung vị 4 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"nl-fuji-residence": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"nl-kikyo": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"sk-serenity": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"mik-park-residence": {
+"kind": "chotot",
+"mid": 44.0,
+"lo": 41.0,
+"hi": 45.5,
+"n": 34,
+"note": "Trung vị 34 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+}
+}

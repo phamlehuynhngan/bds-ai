@@ -8,6 +8,7 @@ Người dùng: "chị" (xưng "em"), trả lời tiếng Việt, ngắn gọn. 
 - Tab Metro: `docs/metro3d.js` chuyển từ bdsvietnam `metro-anim.js` (cầu cạn, đoạn ngầm, tàu 3D, camera bám tàu, thanh điều khiển `#metroBar`); bấm tuyến để chạy, bấm lại/đổi tab để dừng.
 - Tab Hỏi đáp: không có tiêu đề/nút Cài đặt (chị yêu cầu xoá). Cài đặt kết nối ẩn: mở `…/docs/#caidat` hoặc gõ `/caidat` trong ô chat.
 - Trợ lý: model `claude-opus-5-5`, effort low, fallbacks default; SDK đóng gói sẵn `docs/vendor/anthropic-sdk-1.4.0.mjs`. Kết nối: proxy `worker/claude-proxy.js` hoặc khoá cá nhân (localStorage) hoặc chế độ không LLM.
+- Giá dự án: `pipeline/project_prices.py` -> `docs/data/project_prices.json` (ưu tiên trung vị ≥3 tin Chợ Tốt của dự án; không đủ thì `PRESS` = giá báo chí/sàn có link, tra 17/11/2026; nhà phố–biệt thự = `thap_tang`, không định giá). Giá ước tính AI tại dự án = giá thị trường dự án × hệ số căn hộ (mô hình có đặc trưng `proj_med` = log trung vị giá dự án). Cập nhật giá dự án mới: sửa `PRESS` rồi chạy lại script.
 - Dữ liệu web: `docs/data/infra.json`, `projects.json` xuất từ repo bdsvietnam (infra.js, projects.js, developers.js) — cập nhật bên đó thì xuất lại.
 - Dữ liệu: Chợ Tốt Nhà (gateway.chotot.com), OSM qua tiles.openfreemap.org (Overpass bị chặn). batdongsan.com.vn có Cloudflare — không vượt chặn.
 - Không đưa ảnh/logo CĐT lên repo này (repo công khai cho đồ án). Dự án lấy từ bdsvietnam chỉ gồm chữ (tên, CĐT, toạ độ, địa chỉ, mô tả, thông tin), không ảnh.

@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611171630";
+const V = "?v=202611171730";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -9,7 +9,8 @@ const LABEL = {size:"Diện tích",rooms:"Số phòng ngủ",toilets:"Số nhà 
   d_center:"Khoảng cách tới trung tâm (Bến Thành)",d_metro:"Khoảng cách tới ga Metro số 1",
   n_edu_1km:"Số trường học trong 1 km",n_health_1km:"Số cơ sở y tế trong 1 km",n_shop_1km:"Số siêu thị, TTTM trong 1 km",n_park_1km:"Số công viên trong 1 km",
   d_edu:"Khoảng cách tới trường gần nhất",d_health:"Khoảng cách tới cơ sở y tế gần nhất",d_shop:"Khoảng cách tới siêu thị, TTTM gần nhất",d_park:"Khoảng cách tới công viên gần nhất",
-  lat:"Vị trí cụ thể (toạ độ)",lon:"Vị trí cụ thể (toạ độ)"};
+  lat:"Vị trí cụ thể (toạ độ)",lon:"Vị trí cụ thể (toạ độ)",proj_med:"Mặt bằng giá của dự án"};
+const KIND = {chotot: "Tin rao bán trên Chợ Tốt Nhà", rao_ban: "Giá rao bán tổng hợp (báo chí, sàn)", so_cap: "Giá chủ đầu tư/môi giới rao (sơ cấp)", du_kien: "Giá dự kiến (chưa công bố chính thức)"};
 const PRICE_STOPS=[30,45,60,80,110,150,220],PRICE_COL=["#f3e7c9","#ecc98a","#e0a55a","#cf7a3a","#b5502a","#8c2f22","#5c1a1a"];
 const EFF_STOPS=[-40,-20,-5,0,5,20,40],EFF_COL=["#2f6b4f","#6fa585","#cfe1d3","#f6f1e6","#f1cfb1","#d98a5c","#a6402a"];
 const KM_LON = 111.32 * Math.cos(10.8 * Math.PI / 180);
@@ -35,46 +36,61 @@ function explain(x) { // Saabas: đóng góp theo đường quyết định củ
   const c = new Array(F.length).fill(0); let bias = 0, y = 0;
   for (const t of D.trees) {
     let n = t; bias += Array.isArray(t) ? t[4] : t;
-    while (Array.isArray(n)) { const nx = x[n[0]] <= n[1] ? n[2] : n[3]; c[n[0]] += (Array.isArray(nx) ? nx[4] : nx) - n[4]; n = nx; }
+    while (Array.isArray(n)) { const v = x[n[0]], nx = (v !== v ? (n.length > 5 ? n[5] === 1 : 0 <= n[1]) : v <= n[1]) ? n[2] : n[3]; c[n[0]] += (Array.isArray(nx) ? nx[4] : nx) - n[4]; n = nx; }
     y += n;
   }
   return {y, bias, c};
 }
 const DEFAULT_APT = {size: 70, rooms: 2, toilets: 2, furnishing_sell: 2, property_legal_document: 6, property_status: 2, apartment_type: 1};
-/** Định giá tại (lat, lon) cho căn hộ apt -> giá/m², tổng, yếu tố, tin rao lân cận */
-function valuate(lat, lon, apt = {}) {
-  const a = {...DEFAULT_APT, ...apt}, sf = spatial(lat, lon), x = F.map(k => k in a ? +a[k] : sf[k]);
-  const {y, bias, c} = explain(x), p = Math.exp(y), err = D.model.results.at(-1)["MAPE_%"] / 100;
+/** Giá thị trường tham khảo của dự án (id) hoặc null */
+function market(pid) { const m = pid && D.pp?.[pid]; return m && m.mid ? m : null; }
+/** Định giá tại (lat, lon) cho căn hộ apt. Nếu biết dự án (pid) có giá thị trường:
+ *  giá ước tính = giá thị trường dự án × (mô hình[căn này] / mô hình[căn tham chiếu 70 m², 2 PN]) */
+function valuate(lat, lon, apt = {}, pid = null) {
+  const a = {...DEFAULT_APT, ...apt}, sf = spatial(lat, lon), mk = market(pid);
+  sf.proj_med = mk ? Math.log(mk.mid) : NaN;
+  const vec = o => F.map(k => k in o ? +o[k] : sf[k]);
+  const {y, bias, c} = explain(vec(a));
+  let p = Math.exp(y), err = (mk ? D.model.err_pct : D.model.results[3]["MAPE_%"]) / 100, ratio = null;
+  if (mk) { ratio = p / Math.exp(explain(vec(DEFAULT_APT)).y); p = mk.mid * ratio; }
   const items = [];
   F.forEach((k, i) => { if (k === "lon") return; let v = c[i]; if (k === "lat") v += c[F.indexOf("lon")]; items.push({name: LABEL[k], pct: (Math.exp(v) - 1) * 100}); });
   items.sort((u, v) => Math.abs(v.pct) - Math.abs(u.pct));
   const near = D.list.filter(l => dist(lat, lon, l[0], l[1]) < 1).map(l => l[2]).sort((u, v) => u - v);
   return {gia_trieu_m2: +p.toFixed(1), tong_ty: +(p * a.size / 1000).toFixed(2), dien_tich: a.size,
     khoang_tham_khao_trieu_m2: [+(p * (1 - err)).toFixed(1), +(p * (1 + err)).toFixed(1)], sai_so_trung_binh_pct: +(err * 100).toFixed(1),
+    phuong_phap: mk ? "Giá thị trường dự án × hệ số căn hộ của mô hình" : "Mô hình theo vị trí (chưa biết giá dự án)",
+    gia_thi_truong_du_an: mk ? {tu: mk.lo, den: mk.hi, trung_binh: mk.mid, loai: KIND[mk.kind], so_tin: mk.n || null, nguon: mk.src || null, ghi_chu: mk.note} : null,
+    he_so_can_ho: ratio ? +ratio.toFixed(3) : null,
     gia_nen_trieu_m2: +Math.exp(bias).toFixed(1), yeu_to: items.slice(0, 7).map(i => ({ten: i.name, anh_huong_pct: +i.pct.toFixed(0)})),
     tin_rao_1km: near.length, trung_vi_tin_rao_1km: near.length ? near[Math.floor(near.length / 2)] : null,
     ga_metro_gan_nhat: sf._station, km_toi_ga: +sf.d_metro.toFixed(2), km_toi_ben_thanh: +sf.d_center.toFixed(1)};
 }
+const mkHTML = (m, cls = "") => m ? `<div class="mk ${cls}"><div class="mk-h">Giá thị trường tham khảo</div><div class="mk-v">${fmt(m.lo, 0)}–${fmt(m.hi, 0)} <small>triệu/m²</small></div>
+  <div class="mk-n">${esc(KIND[m.kind] || "")}${m.n ? ` · ${m.n} tin` : ""}. ${esc(m.note)}${m.src ? ` <a href="${esc(m.src)}" target="_blank" rel="noopener">Nguồn ↗</a>` : ""}</div></div>` : "";
 
 /* ================= tab Bản đồ giá ================= */
 function apt() { return {size: +$("#fSize").value || 70, rooms: +$("#fRooms").value, toilets: +$("#fToilets").value, furnishing_sell: +$("#fFurn").value,
   property_legal_document: +$("#fLegal").value, property_status: +$("#fStatus").value, apartment_type: 1}; }
 function renderValue() {
   if (!pick) return;
-  const r = valuate(pick.lat, pick.lon, apt()), mx = Math.max(...r.yeu_to.map(t => Math.abs(t.anh_huong_pct)), 5);
+  const lr = pick.pid && D.pp?.[pick.pid]?.kind === "thap_tang";
+  if (lr) { $("#out").innerHTML = `<div class="empty">${esc(D.pp[pick.pid].note)}</div>`; return; }
+  const r = valuate(pick.lat, pick.lon, apt(), pick.pid), mx = Math.max(...r.yeu_to.map(t => Math.abs(t.anh_huong_pct)), 5);
   $("#out").innerHTML = `
   <div class="result"><div class="big">${fmt(r.gia_trieu_m2)} <small>triệu/m²</small></div>
     <div class="tot">≈ <b>${fmt(r.tong_ty, 2)} tỷ</b> cho căn ${r.dien_tich} m²</div>
-    <div class="rng">Khoảng tham khảo ${fmt(r.khoang_tham_khao_trieu_m2[0])}–${fmt(r.khoang_tham_khao_trieu_m2[1])} triệu/m² (± sai số trung bình ${fmt(r.sai_so_trung_binh_pct)}%)</div></div>
+    <div class="rng">Khoảng tham khảo ${fmt(r.khoang_tham_khao_trieu_m2[0])}–${fmt(r.khoang_tham_khao_trieu_m2[1])} triệu/m² (± ${fmt(r.sai_so_trung_binh_pct)}%) · ${esc(r.phuong_phap)}</div></div>
+  ${mkHTML(market(pick.pid))}
   <div class="sec why"><h3>Vì sao có mức giá này</h3>
     ${r.yeu_to.map(({ten, anh_huong_pct: e}) => { const w = Math.min(50, Math.abs(e) / mx * 50);
       return `<div class="row"><div class="nm">${ten}</div><div class="trk"><div class="b" style="${e >= 0 ? "left:50%;background:var(--pos)" : "right:50%;background:var(--neg)"};width:${w}%"></div></div><div class="v" style="color:${e >= 0 ? "var(--pos)" : "var(--neg)"}">${e >= 0 ? "+" : ""}${fmt(e, 0)}%</div></div>`; }).join("")}
-    <div class="note">So với mức giá nền ${fmt(r.gia_nen_trieu_m2)} triệu/m² (trung bình toàn bộ dữ liệu). Đóng góp tính theo đường quyết định của các cây LightGBM.</div></div>
+    <div class="note">${r.he_so_can_ho ? `Hệ số căn hộ so với căn tham chiếu 70 m², 2 PN: ×${fmt(r.he_so_can_ho, 2)}. ` : ""}Mức ảnh hưởng so với giá nền ${fmt(r.gia_nen_trieu_m2)} triệu/m² (trung bình dữ liệu), tính theo đường quyết định của các cây LightGBM.</div></div>
   <div class="sec"><h3>Đối chiếu tin rao thực tế</h3><div class="ev">${r.tin_rao_1km ? `Trong bán kính 1 km có <b>${r.tin_rao_1km}</b> tin rao, trung vị <b>${fmt(r.trung_vi_tin_rao_1km)} triệu/m²</b>.` : "Không có tin rao nào trong bán kính 1 km — dự đoán ở đây kém tin cậy hơn."}</div></div>`;
   $("#pSub").innerHTML = (pick.sub ? pick.sub + "<br>" : "") + `Cách Bến Thành ${fmt(r.km_toi_ben_thanh)} km · ga Metro gần nhất: ${esc(r.ga_metro_gan_nhat)} (${fmt(r.km_toi_ga)} km)`;
 }
-function setPick(lat, lon, title, sub) {
-  pick = {lat, lon, sub: sub || ""}; $("#pTitle").textContent = title || "Điểm đã chọn";
+function setPick(lat, lon, title, sub, pid = null) {
+  pick = {lat, lon, sub: sub || "", pid}; $("#pTitle").textContent = title || "Điểm đã chọn";
   map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: [lon, lat]}});
   $("#hint").style.opacity = 0; renderValue();
 }
@@ -127,19 +143,20 @@ function fitPoints(pts, maxZoom = 14.5) {
 }
 function showProject(id) {
   const p = D.prj.projects.find(x => x.id === id); if (!p) return;
-  const d = devOf(p), st = nearestStation(p.ll[0], p.ll[1]), r = valuate(p.ll[0], p.ll[1]);
+  const d = devOf(p), st = nearestStation(p.ll[0], p.ll[1]), pp = D.pp?.[p.id] || {}, low = pp.kind === "thap_tang", r = low ? null : valuate(p.ll[0], p.ll[1], {}, p.id);
   $("#pjList").hidden = true; $("#pjDetail").hidden = false;
   $("#pjDetail").innerHTML = `<button class="back" id="pjBack">‹ Danh sách dự án</button>
     <h2>${esc(p.n)}</h2><div class="sub">Chủ đầu tư: <b>${esc(d.n)}</b>${p.g ? " · " + esc(p.g) : ""}</div>
     ${p.tag ? `<div class="tagline">${esc(p.tag)}</div>` : ""}
     <dl class="kv">${p.addr ? `<dt>Địa chỉ</dt><dd>${esc(p.addr)}${p.a ? " (vị trí tham khảo)" : ""}</dd>` : ""}
       <dt>Ga Metro số 1</dt><dd>${esc(st.n)} · ${fmt(st.d)} km</dd>
-      <dt>Giá mô hình</dt><dd>≈ ${fmt(r.gia_trieu_m2)} triệu/m² (căn 70 m², 2 PN)</dd>
+      ${low ? `<dt>Giá</dt><dd>${esc(pp.note)}</dd>` : `<dt>Ước tính AI</dt><dd>≈ <b>${fmt(r.gia_trieu_m2)} triệu/m²</b> · căn 70 m², 2 PN ≈ ${fmt(r.tong_ty, 1)} tỷ${market(p.id) ? "" : " (chỉ theo vị trí, chưa có giá dự án)"}</dd>`}
       ${(p.info || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${mkHTML(market(p.id))}
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : `<p class="desc">Thông tin dự án đang cập nhật.</p>`}
-    <button class="btn" id="pjValue">Định giá chi tiết</button> ${p.web ? `<a class="btn alt" href="${esc(p.web)}" target="_blank" rel="noopener">Web chủ đầu tư ↗</a>` : ""}`;
+    ${low ? "" : `<button class="btn" id="pjValue">Định giá chi tiết</button>`} ${p.web ? `<a class="btn alt" href="${esc(p.web)}" target="_blank" rel="noopener">Web chủ đầu tư ↗</a>` : ""}`;
   $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); stopOrbit(); };
-  $("#pjValue").onclick = () => { setTab("price"); setPick(p.ll[0], p.ll[1], p.n, "Chủ đầu tư: " + esc(d.n)); };
+  if ($("#pjValue")) $("#pjValue").onclick = () => { setTab("price"); setPick(p.ll[0], p.ll[1], p.n, "Chủ đầu tư: " + esc(d.n), p.id); };
   map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}});
   stopOrbit(); window.metroStop?.();
   map.flyTo({center: [p.ll[1], p.ll[0]], zoom: p.poly ? 15.4 : 16.2, pitch: 60, bearing: map.getBearing() - 30, duration: 1800, essential: true});
@@ -224,10 +241,10 @@ $("#lyProjects").onchange = e => map.setLayoutProperty("pj", "visibility", e.tar
 /* ================= khởi động ================= */
 async function boot() {
   const j = u => fetch("data/" + u + V).then(r => r.json());
-  [D.model, D.trees, D.poi, D.metro, D.prj, D.list, D.infra] = await Promise.all(["model.json", "trees.json", "poi.json", "metro.json", "projects.json", "listings.json", "infra.json"].map(j));
+  [D.model, D.trees, D.poi, D.metro, D.prj, D.list, D.infra, D.pp] = await Promise.all(["model.json", "trees.json", "poi.json", "metro.json", "projects.json", "listings.json", "infra.json", "project_prices.json"].map(j));
   F = D.model.features;
   $("#mode").innerHTML = MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
-  $("#disc").innerHTML = `Mô hình học từ <b>${D.model.n.toLocaleString("vi-VN")}</b> tin rao bán căn hộ (${esc(D.model.collected)}), sai số trung bình ${fmt(D.model.results.at(-1)["MAPE_%"])}%. Giá tin rao là giá chào bán, không phải giá giao dịch. Kết quả chỉ để tham khảo.`;
+  $("#disc").innerHTML = `Mô hình học từ <b>${D.model.n.toLocaleString("vi-VN")}</b> tin rao bán căn hộ (${esc(D.model.collected)}), sai số trung bình ${fmt(D.model.err_pct)}% với căn thuộc dự án đã có giá, ${fmt(D.model.results[3]["MAPE_%"])}% khi chỉ biết vị trí. Giá tin rao là giá chào bán, không phải giá giao dịch. Kết quả chỉ để tham khảo.`;
   renderProjects(); renderMetro();
   map = new maplibregl.Map({container: "map", style: "https://tiles.openfreemap.org/styles/positron", center: [106.715, 10.785], zoom: 12.2, pitch: 55, bearing: -20, maxPitch: 75, attributionControl: false});
   map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: "Tin rao: Chợ Tốt Nhà"}));
@@ -279,7 +296,7 @@ async function boot() {
     map.on("click", e => {
       const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0];
       if (state.tab === "projects") { if (f) showProject(f.properties.id); return; }
-      if (state.tab === "price") { if (f) { const [lon, lat] = f.geometry.coordinates; setPick(lat, lon, f.properties.n, "Chủ đầu tư: " + esc(f.properties.d)); } else setPick(e.lngLat.lat, e.lngLat.lng); }
+      if (state.tab === "price") { if (f) { const [lon, lat] = f.geometry.coordinates; setPick(lat, lon, f.properties.n, "Chủ đầu tư: " + esc(f.properties.d), f.properties.id); } else setPick(e.lngLat.lat, e.lngLat.lng); }
       if (state.tab === "metro" && f) { setTab("projects"); showProject(f.properties.id); }
     });
     for (const l of ["pj", "ls"]) { map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", l, () => map.getCanvas().style.cursor = ""); }
@@ -291,5 +308,5 @@ async function boot() {
   });
   if (matchMedia("(max-width:820px)").matches) $("#layers").open = false;
 }
-window.APP = {D, startOrbit, stopOrbit, valuate, spatial, nearestStation, dist, norm, esc, fmt, showHits, setTab, setPick, fitPoints, showProject, get map() { return map; }};
+window.APP = {D, market, startOrbit, stopOrbit, valuate, spatial, nearestStation, dist, norm, esc, fmt, showHits, setTab, setPick, fitPoints, showProject, get map() { return map; }};
 boot();
