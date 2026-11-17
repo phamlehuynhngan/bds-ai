@@ -75,12 +75,12 @@ grid = [{"lat": round(float(a), 5), "lon": round(float(b), 5), "p": round(float(
          "s": [round(float(v), 3) for v in s]} for a, b, c, s in zip(LA, LO, gp, gs)]
 
 # xuất
-pts_out = df[["lat", "lon", "ppm2", "size", "rooms", "pty_project_name"]].round(3)  # làm tròn ~100 m, không công bố toạ độ gốc
+pts_out = df[["lat", "lon", "ppm2", "size", "rooms", "pty_project_name", "area_name"]].round(3)  # làm tròn ~100 m, không công bố toạ độ gốc
 json.dump({"features": FULL, "base": float(expl.expected_value), "ref": REF, "grid": grid,
            "results": results, "importance": [[k, round(float(v), 4)] for k, v in imp],
            "n": int(len(df)), "n_raw": int(n0),
            "collected": "Chợ Tốt Nhà (API công khai), 11/2026"}, open("docs/data/model.json", "w"), ensure_ascii=False)
-json.dump([[r.lat, r.lon, round(r.ppm2, 1), r.size, None if pd.isna(r.pty_project_name) else r.pty_project_name]
+json.dump([[r.lat, r.lon, round(r.ppm2, 1), r.size, None if pd.isna(r.pty_project_name) else r.pty_project_name, int(r.rooms), r.area_name]
            for r in pts_out.itertuples()], open("docs/data/listings.json", "w"), ensure_ascii=False)
 import os; os.makedirs("models", exist_ok=True); final.booster_.save_model("models/lgb.txt")
 json.dump(final.booster_.dump_model()["tree_info"], open("data/trees_full.json", "w"))
