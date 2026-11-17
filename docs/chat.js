@@ -31,6 +31,13 @@ const TOOLS = [
       phap_ly: {type: "string", enum: ["so_hong", "hdmb", "cho_so"]}, da_ban_giao: {type: "boolean"}}}},
   {name: "thong_tin_metro", description: "Thông tin các tuyến Metro TP.HCM (số 1 đang chạy; 2, 4, 5, 6, 7, Thủ Thiêm – Long Thành, Bến Thành – Cần Giờ quy hoạch): chiều dài, tiến độ, danh sách ga tuyến 1 và số dự án gần mỗi ga. Có thể làm nổi một tuyến trên bản đồ.",
     input_schema: {type: "object", additionalProperties: false, properties: {tuyen: {type: "string", description: "m1, m2, m4, m5, m6, m7, mtt, mcg hoặc bỏ trống để lấy tất cả"}}}},
+  {name: "lo_trinh", description: "Tìm đường ngắn nhất theo thời gian bằng thuật toán A* trên đồ thị đường OpenStreetMap TP.HCM, cho xe máy, ô tô hoặc đi bộ + Metro số 1. Điểm đi/đến là tên dự án hoặc địa chỉ. Trả về số phút, km, ga lên/xuống, và số nút A* so với Dijkstra; vẽ lộ trình trên bản đồ.",
+    input_schema: {type: "object", additionalProperties: false, properties: {
+      tu: {type: "string", description: "Tên dự án hoặc địa chỉ điểm đi"}, den: {type: "string", description: "Tên dự án hoặc địa chỉ điểm đến"},
+      phuong_tien: {type: "string", enum: ["moto", "car", "metro"], description: "moto = xe máy, car = ô tô, metro = đi bộ + Metro số 1"}}, required: ["tu", "den"]}},
+  {name: "vung_di_chuyen", description: "Tính vùng có thể tới trong N phút (mặc định 30) từ một dự án/địa chỉ bằng Dijkstra; trả về số đoạn đường tới được và các ga Metro trong tầm; vẽ vùng trên bản đồ.",
+    input_schema: {type: "object", additionalProperties: false, properties: {
+      tu: {type: "string"}, phut: {type: "integer", description: "5–45"}, phuong_tien: {type: "string", enum: ["moto", "car", "metro"]}}, required: ["tu"]}},
   {name: "tim_dia_diem", description: "Tra toạ độ một địa chỉ/địa danh tại TP.HCM (OpenStreetMap Nominatim).",
     input_schema: {type: "object", additionalProperties: false, properties: {ten: {type: "string"}}, required: ["ten"]}},
 ];
@@ -39,6 +46,7 @@ const SYSTEM = `Bạn là trợ lý của web "BĐS AI" — bản đồ dự án
 - Mọi con số về giá, dự án, Metro phải lấy từ kết quả công cụ; không tự đoán. Thiếu dữ liệu thì nói rõ.
 - Giá tin rao là giá chào bán (Chợ Tốt Nhà, 11/2026), không phải giá giao dịch. Với dự án, ưu tiên nêu giá thị trường tham khảo kèm loại giá và nguồn; giá ước tính AI = giá thị trường dự án × hệ số căn hộ. Luôn nêu khoảng tham khảo.
 - Kết quả công cụ đã được đánh dấu trên bản đồ; có thể nhắc người dùng xem bản đồ.
+- Hỏi về đi lại/thời gian di chuyển thì dùng lo_trinh hoặc vung_di_chuyen (thuật toán A*/Dijkstra trên đồ thị đường OSM); nêu số phút, km, ga lên/xuống.
 - Không tư vấn đầu tư hay cam kết lợi nhuận. Dữ liệu chỉ phủ TP.HCM và vùng lân cận.`;
 
 const KM_TOL = 2;
@@ -119,6 +127,20 @@ const TOOL_IMPL = {
     else { const pts = []; I.metro.filter(m => m.line === i.tuyen).forEach(m => m.c.forEach(c => pts.push([c[1], c[0]]))); A().showHits([], false); if (pts.length) A().fitPoints(pts, 13); }
     return res;
   },
+  async lo_trinh(i) {
+    const a = await diem(i.tu), b = await diem(i.den);
+    if (!a || !b) return {loi: "Không xác định được " + (!a ? "điểm đi" : "điểm đến")};
+    A().setTab("chat");
+    const r = await window.ROUTER.route([a.lon, a.lat], [b.lon, b.lat], i.phuong_tien || "moto"); window.ROUTER.draw(r);
+    return {tu: a.ten, den: b.ten, ...r.info};
+  },
+  async vung_di_chuyen(i) {
+    const a = await diem(i.tu); if (!a) return {loi: "Không xác định được điểm"};
+    const m = Math.max(5, Math.min(45, i.phut || 30));
+    const r = await window.ROUTER.isochrone([a.lon, a.lat], i.phuong_tien || "moto", m); window.ROUTER.drawIso(r);
+    A().map.flyTo({center: [a.lon, a.lat], zoom: 11.6, pitch: 35, duration: 1200});
+    return {tu: a.ten, ...r.info};
+  },
   async tim_dia_diem(i) {
     const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=vn&limit=1&viewbox=106.35,11.2,107.05,10.35&bounded=1&q=" + encodeURIComponent(i.ten);
     try { const r = await (await fetch(u, {headers: {"Accept-Language": "vi"}})).json();
@@ -126,6 +148,10 @@ const TOOL_IMPL = {
     catch { return {loi: "Không gọi được dịch vụ tra địa chỉ"}; }
   },
 };
+async function diem(ten) { // tên dự án hoặc địa chỉ -> {lat, lon, ten}
+  const p = projectByName(ten); if (p) return {lat: p.ll[0], lon: p.ll[1], ten: p.n};
+  const g = await TOOL_IMPL.tim_dia_diem({ten}); return g.lat ? {lat: g.lat, lon: g.lon, ten: g.ten} : null;
+}
 async function runTool(name, input) {
   if (!TOOL_IMPL[name]) throw new Error("Công cụ không tồn tại: " + name);
   if (input == null || typeof input !== "object" || Array.isArray(input)) throw new Error("Tham số không hợp lệ");
@@ -133,7 +159,7 @@ async function runTool(name, input) {
 }
 
 /* ================= giao diện ================= */
-const LABELS = {tim_tin_rao: "Đang lọc tin rao", tim_du_an: "Đang tìm dự án", dinh_gia: "Đang chạy mô hình định giá", thong_tin_metro: "Đang tra thông tin Metro", tim_dia_diem: "Đang tra địa chỉ"};
+const LABELS = {tim_tin_rao: "Đang lọc tin rao", tim_du_an: "Đang tìm dự án", dinh_gia: "Đang chạy mô hình định giá", thong_tin_metro: "Đang tra thông tin Metro", tim_dia_diem: "Đang tra địa chỉ", lo_trinh: "Đang tìm đường bằng A*", vung_di_chuyen: "Đang tính vùng di chuyển bằng Dijkstra"};
 function md(s) { // markdown tối giản, an toàn
   const e = A().esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>");
   const lines = e.split("\n"), out = []; let list = null;
@@ -152,7 +178,7 @@ function renderMode() {
   $("#chatMode").innerHTML = {offline: "Chế độ: <b>không dùng LLM</b> — hiểu câu hỏi đơn giản. Bấm Cài đặt để kết nối Claude.",
     key: "Chế độ: <b>Claude (khoá API trên máy này)</b>", proxy: "Chế độ: <b>Claude qua máy chủ trung gian</b>"}[cfg.mode];
 }
-const SUGG = ["Căn hộ 2 phòng ngủ dưới 5 tỷ gần Metro số 1", "Dự án của Masterise gần ga Metro", "Định giá căn 75 m² 2 PN tại Lumière Riverside", "Tiến độ các tuyến Metro TP.HCM", "Giá căn hộ Quận 7 khoảng bao nhiêu?"];
+const SUGG = ["Từ Masteri Thảo Điền đến sân bay Tân Sơn Nhất bằng xe máy", "Vùng 30 phút đi Metro từ Vinhomes Grand Park", "Căn hộ 2 phòng ngủ dưới 5 tỷ gần Metro số 1", "Dự án của Masterise gần ga Metro", "Định giá căn 75 m² 2 PN tại Lumière Riverside", "Tiến độ các tuyến Metro TP.HCM", "Giá căn hộ Quận 7 khoảng bao nhiêu?"];
 function renderSuggest() { $("#suggest").innerHTML = history.length ? "" : SUGG.map(s => `<button>${s}</button>`).join(""); }
 $("#suggest").addEventListener("click", e => { const b = e.target.closest("button"); if (b) ask(b.textContent); });
 
@@ -194,6 +220,18 @@ async function askOffline(q) {
   if (/metro|tuyen|ga /.test(n) && /tien do|tuyen|bao gio|khi nao|cac tuyen/.test(n)) {
     const r = TOOL_IMPL.thong_tin_metro({});
     return show("Các tuyến Metro TP.HCM", "<ul>" + r.tuyen.map(t => `<li><b>${A().esc(t.ten)}</b>: ${t.doan.map(s => A().esc(`${s.n}${s.km ? " (" + s.km + ")" : ""} — ${s.st || "hoàn thành dự kiến " + (s.ht || "?")}`)).join("; ") || A().esc(t.ghi_chu || "")}</li>`).join("") + "</ul>");
+  }
+  const mr = q.match(/(?:từ|tu)\s+(.+?)\s+(?:đến|den|tới|toi|ra|vào|vao)\s+(.+?)(?:\s+(?:bằng|bang|đi|di)\s+(.+))?\s*\??$/i);
+  if (mr || /lo trinh|duong di|mat bao lau|bao lau|vung 30|di chuyen/.test(n)) {
+    const pm = /metro|tau/.test(n) ? "metro" : /o to|xe hoi|oto/.test(n) ? "car" : "moto";
+    if (mr) {
+      const r = await TOOL_IMPL.lo_trinh({tu: mr[1], den: mr[2], phuong_tien: pm});
+      if (r.loi) return add("a", `<p>${A().esc(r.loi)}</p>`);
+      return show(`${A().fmt(r.phut, 0)} phút · ${A().fmt(r.km)} km (${A().esc(r.ten_phuong_tien)})`, `<p>Từ ${A().esc(r.tu)} đến ${A().esc(r.den.split(",")[0])}.</p>${r.di_metro ? `<p>Lên ga <b>${A().esc(r.di_metro[0].len_ga)}</b> → xuống ga <b>${A().esc(r.di_metro.at(-1).xuong_ga)}</b>, đi bộ ${A().fmt(r.km_di_bo)} km.</p>` : ""}<p><small>A* xét ${r.astar.nut_mo_rong.toLocaleString("vi-VN")} nút, Dijkstra ${r.dijkstra.nut_mo_rong.toLocaleString("vi-VN")} nút, cùng lời giải tối ưu.</small></p>`);
+    }
+    const pj2 = A().D.prj.projects.filter(p => n.includes(A().norm(p.n))).sort((a, b) => b.n.length - a.n.length)[0];
+    if (pj2) { const r = await TOOL_IMPL.vung_di_chuyen({tu: pj2.n, phuong_tien: pm});
+      return show(`Vùng 30 phút từ ${A().esc(pj2.n)}`, `<p>${A().esc(window.ROUTER.MODES[pm].name)}: tới được ${r.so_doan_duong.toLocaleString("vi-VN")} đoạn đường${r.ga_metro_toi_duoc.length ? `, ${r.ga_metro_toi_duoc.length} ga Metro` : ""}. Xem màu trên bản đồ (xanh 0–10′, vàng 10–20′, cam 20–30′).</p>`); }
   }
   const dev = Object.entries(DEV_ALIAS).find(([, al]) => al.some(a => n.includes(a)))?.[0];
   const pj = A().D.prj.projects.filter(p => n.includes(A().norm(p.n))).sort((a, b) => b.n.length - a.n.length)[0];

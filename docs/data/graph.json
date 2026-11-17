@@ -1,0 +1,1 @@
+{"lon0": 106.56, "lat0": 10.66, "grid": 1e-05, "classes": ["motorway", "trunk", "primary", "secondary", "tertiary", "minor"], "bbox": [10.66, 106.56, 10.96, 106.86], "nodes": 103186, "edges": 121875, "source": "OpenStreetMap qua OpenFreeMap (vector tile z14)", "built": "2026-11-17"}

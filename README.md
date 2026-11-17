@@ -8,6 +8,7 @@ pip install -r requirements.txt
 python3 pipeline/collect_chotot.py     # tin rao -> data/raw_chotot.jsonl (~1 request/giây)
 python3 pipeline/fetch_poi_tiles.py    # tiện ích OSM -> data/poi.json
 python3 pipeline/train.py              # làm sạch, so sánh mô hình (+ đặc trưng giá dự án), SHAP -> docs/data/
+python3 pipeline/build_graph.py        # đồ thị đường OSM cho A*/Dijkstra -> docs/data/graph.bin.gz
 python3 pipeline/project_prices.py     # giá thị trường tham khảo từng dự án (Chợ Tốt + báo chí có nguồn)
 cp data/poi.json docs/data/poi.json
 ```
@@ -22,6 +23,8 @@ Xem web: `cd docs && python3 -m http.server 8000`.
 | `pipeline/train.py` | Hồi quy tuyến tính vs LightGBM, kiểm định chéo chia theo không gian, SHAP, xuất cây cho trình duyệt |
 | `docs/` | Web 4 tab: Dự án (CĐT lớn) · Metro (tuyến 1 + quy hoạch) · Bản đồ giá (mô hình + SHAP) · Hỏi đáp (trợ lý Claude gọi công cụ tra cứu) |
 | `docs/chat.js` | Trợ lý: Claude (claude-opus-5-5) + 5 công cụ chạy trong trình duyệt (lọc tin rao, tìm dự án, định giá, Metro, tra địa chỉ); có chế độ không LLM |
+| `docs/route.js` | A* / Dijkstra đa phương thức (xe máy, ô tô, đi bộ + Metro số 1) và vùng di chuyển 30 phút, chạy trong trình duyệt |
+| `pipeline/build_graph.py` | Dựng đồ thị đường bộ từ vector tile OSM: cắt biên tile, nối toạ độ ~1 m, tách giao cắt, rút gọn nút bậc 2 |
 | `worker/claude-proxy.js` | Máy chủ trung gian Cloudflare Worker giữ khoá API cho bản công khai |
 
 ## Lưu ý dữ liệu

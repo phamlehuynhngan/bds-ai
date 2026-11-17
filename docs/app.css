@@ -144,3 +144,9 @@ dialog .row button:last-child{padding:8px 16px;border-radius:999px;background:va
 .mk-h{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .mk-v{font-size:20px;font-weight:700;margin-top:2px}.mk-v small{font-size:13px;font-weight:500;color:var(--ink-2)}
 .mk-n{font-size:12px;color:var(--ink-2);margin-top:4px;line-height:1.45}.mk-n a{color:var(--gold)}
+.rt-row{display:flex;gap:8px;align-items:center}
+.rt-row select{flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--cream);font-size:13px}
+.btn.sm{margin-top:0;padding:7px 12px;font-size:12.5px;white-space:nowrap}
+#rtModes{margin:4px 0 8px}
+.algo{font-size:11.5px;color:var(--ink-2);background:var(--cream);border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;line-height:1.5}
+.iso-lg{display:flex;gap:12px;font-size:12px;color:var(--ink-2);margin-top:6px}.iso-lg i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:4px;vertical-align:middle}
