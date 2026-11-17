@@ -1,0 +1,5 @@
+data/raw_*.jsonl
+data/collect.log
+data/trees_full.json
+models/
+__pycache__/
