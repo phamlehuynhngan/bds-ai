@@ -10,7 +10,7 @@ python3 pipeline/fetch_poi_tiles.py    # tiện ích OSM -> data/poi.json
 python3 pipeline/train.py              # làm sạch, so sánh mô hình (+ đặc trưng giá dự án), SHAP -> docs/data/
 python3 pipeline/build_graph.py        # đồ thị đường OSM cho A*/Dijkstra -> docs/data/graph.bin.gz
 python3 pipeline/fetch_places.py       # tiện ích có tên (OSM) -> docs/data/places.json
-python3 pipeline/add_developers.py     # thêm 8 CĐT (Novaland, Hưng Thịnh, …) và dự án vào projects.json
+python3 pipeline/add_developers.py     # thêm 8 CĐT (Novaland, Hưng Thịnh, BLUEMARQ, …) + dự án bổ sung và dự án vào projects.json
 python3 pipeline/project_prices.py     # giá thị trường tham khảo từng dự án (Chợ Tốt + báo chí có nguồn)
 cp data/poi.json docs/data/poi.json
 ```

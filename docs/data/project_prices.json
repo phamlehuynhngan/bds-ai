@@ -503,6 +503,14 @@
 "n": 12,
 "note": "Trung vị 12 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
+"datxanh-the-prive": {
+"kind": "chotot",
+"mid": 130.0,
+"lo": 121.3,
+"hi": 134.4,
+"n": 3,
+"note": "Trung vị 3 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
 "phatdat-the-everrich-infinity": {
 "kind": "chotot",
 "mid": 99.4,
@@ -626,5 +634,21 @@
 "hi": 212.1,
 "n": 5,
 "note": "Trung vị 5 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"phulong-essensia-sky": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"phulong-essensia-parkway": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"keppel-celesta-gold": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"mik-imperia-sensa-park": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
 }
 }
