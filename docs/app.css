@@ -210,7 +210,7 @@ dialog .row button:last-child{padding:8px 16px;border-radius:999px;background:va
 .au-card{margin-top:16px;padding:18px;border-radius:14px;background:var(--beige);border:1px solid var(--line-2)}
 .au-name{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .au-role{margin-top:4px;font-weight:600;color:var(--ink-2)}
-.au-school{margin-top:2px;font-size:13px;color:var(--muted)}
+.au-school{margin-top:6px;font-size:13.5px;line-height:1.55;color:var(--ink-2)}
 .au-sec{margin-top:12px}.au-sec h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px}
 .au-sec p{font-size:13.5px;line-height:1.6}.au-sec p+p{margin-top:8px}
 .au-list{margin:0;padding-left:18px;font-size:13.5px;line-height:1.6}.au-list li+li{margin-top:6px}
