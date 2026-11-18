@@ -1,5 +1,5 @@
 /* Bản đồ dự án BĐS TP.HCM – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611191700";
+const V = "?v=202611191800";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -507,7 +507,7 @@ async function boot() {
     const tag = (id, extra, lay) => map.addLayer({id, type: "symbol", source: "pj", ...extra, layout: {"text-field": ["get", "n"], "text-font": ["Noto Sans Bold"], "text-size": 12.5,
       "text-anchor": "left", "text-offset": [1.25, 0], "icon-image": ["concat", "pill-", ["get", "dv"]], "icon-text-fit": "both", "icon-text-fit-padding": [4, 10, 4, 10],
       "text-max-width": 14, ...lay}, paint: {"text-color": "#ffffff"}});
-    tag("pj-t", {minzoom: 10.5}, {"symbol-sort-key": ["get", "k"]});
+    tag("pj-t", {minzoom: 14}, {"symbol-sort-key": ["get", "k"]});
     tag("pj-sel", {filter: ["==", ["get", "id"], ""]}, {"text-allow-overlap": true, "icon-allow-overlap": true, "text-ignore-placement": true, "icon-ignore-placement": true});
     // kết quả hỏi đáp
     map.addSource("hits", {type: "geojson", data: FC([])});
@@ -515,7 +515,10 @@ async function boot() {
     map.addLayer({id: "hits-t", type: "symbol", source: "hits", minzoom: 11, layout: {"text-field": ["get", "t"], "text-size": 11.5, "text-offset": [0, 1.1], "text-anchor": "top", "text-font": ["Noto Sans Regular"], "text-max-width": 12}, paint: {"text-color": "#3b2a14", "text-halo-color": "#fff", "text-halo-width": 1.4}});
     map.addSource("pick", {type: "geojson", data: FC([])});
     map.addLayer({id: "pick", type: "circle", source: "pick", paint: {"circle-radius": 10, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#3b2a14", "circle-stroke-width": 3}});
-    setMode("p"); renderProjects(); setTab(state.tab); startOrbit(2.5);
+    setMode("p"); renderProjects(); setTab(state.tab);
+    // mở web: bay vào One Central Saigon rồi xoay (giống web map Masterise)
+    setTimeout(() => { const oc = D.prj.projects.find(p => p.id === "one-central");
+      if (oc && !touched) { map.setFilter("pj-sel", ["==", ["get", "id"], oc.id]); flyOrbit({center: [oc.ll[1], oc.ll[0]], zoom: 16.2, pitch: 60, bearing: 155, duration: 3200}); } }, 700);
     addAnchors();
     map.on("click", e => {
       const f = map.queryRenderedFeatures(e.point, {layers: ["pj", "pj-t", "pj-sel"].filter(l => map.getLayer(l))})[0];

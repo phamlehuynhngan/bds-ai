@@ -50,7 +50,7 @@ async function init() {
   const B = await fetch("data/buildings.json?v=202611181400").then(r => r.json());
   const OSM_IDS = B.filter(b => b.src === "osm" || b.hide).map(b => b.hide || b.id); // ẩn khối xám OSM trùng chỗ
   if (map.getLayer("b3d")) map.setFilter("b3d", ["!", ["in", ["id"], ["literal", OSM_IDS]]]);
-  map.addSource("pb", {type: "geojson", data: {type: "FeatureCollection", features: buildFeatures(B)}});
+  map.addSource("pb", {type: "geojson", data: {type: "FeatureCollection", features: buildFeatures(window.THREE ? B.filter(b => b.p !== "one-central") : B)}});  // có Three.js: One Central vẽ bằng oc3d.js
   map.addLayer({id: "towers", type: "fill-extrusion", source: "pb", minzoom: 12,
     paint: {"fill-extrusion-color": ["get", "c"], "fill-extrusion-height": ["get", "h"], "fill-extrusion-base": ["get", "b"], "fill-extrusion-opacity": 1, "fill-extrusion-vertical-gradient": true}});
   map.on("click", "towers", e => { const id = e.features[0].properties.pid; if (id && document.body.dataset.tab === "projects") window.APP.showProject(id); });
