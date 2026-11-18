@@ -1,5 +1,5 @@
 /* Bản đồ dự án BĐS TP.HCM – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611191900";
+const V = "?v=202611192000";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -118,7 +118,9 @@ function filteredProjects() {
   const q = norm(state.q);
   return D.prj.projects.filter(p => (state.dev === "all" || p.d === state.dev) && (!q || norm(p.n + " " + p.addr).includes(q)));
 }
-const pjRow = p => { const d = devOf(p); return `<button class="item" data-id="${p.id}"><span class="dot" style="background:${d.c}">${esc(d.s)}</span><b>${esc(p.n)}</b><small>${p.addr ? esc(p.addr) : esc(d.n)}</small></button>`; };
+// ô nhận diện CĐT: logo nếu có, không thì chữ viết tắt trên nền màu CĐT
+const devBadge = d => d.logo ? `<span class="dot logo"><img src="${esc(d.logo)}" alt="${esc(d.n)}"></span>` : `<span class="dot" style="background:${d.c}">${esc(d.s)}</span>`;
+const pjRow = p => { const d = devOf(p); return `<button class="item" data-id="${p.id}">${devBadge(d)}<b>${esc(p.n)}</b><small>${p.addr ? esc(p.addr) : esc(d.n)}</small></button>`; };
 function renderProjects() {
   const cnt = {}; D.prj.projects.forEach(p => cnt[p.d] = (cnt[p.d] || 0) + 1);
   $("#pjCount").textContent = `${D.prj.projects.length} dự án · bấm vào chủ đầu tư để xem`;
@@ -128,7 +130,7 @@ function renderProjects() {
   } else {
     $("#devAcc").innerHTML = Object.entries(D.prj.dev).filter(([k]) => cnt[k]).map(([k, v]) => {
       const open = state.dev === k;
-      return `<div class="dev ${open ? "open" : ""}"><button class="dev-h" data-d="${k}"><span class="dot" style="background:${v.c}">${esc(v.s)}</span><b>${esc(v.n)}</b><small>${cnt[k]} dự án</small><i>▾</i></button>
+      return `<div class="dev ${open ? "open" : ""}"><button class="dev-h" data-d="${k}">${devBadge(v)}<b>${esc(v.n)}</b><small>${cnt[k]} dự án</small><i>▾</i></button>
         ${open ? `<div class="dev-b">${D.prj.projects.filter(p => p.d === k).map(pjRow).join("")}${v.web ? `<a class="dev-web" href="${esc(v.web)}" target="_blank" rel="noopener">Web ${esc(v.n)} ↗</a>` : ""}</div>` : ""}</div>`; }).join("");
   }
   if (map?.getLayer("pj")) {
@@ -149,7 +151,7 @@ function showProject(id) {
   const stat = (lbl, val, sub) => `<div class="stat"><span>${lbl}</span><b>${val}</b><small>${sub}</small></div>`;
   $("#pjDetail").innerHTML = `<button class="back" id="pjBack"><i>‹</i> Danh sách dự án</button>
     <header class="pj-hero" style="--dc:${dc}">
-      <div class="pj-dev"><span class="dot" style="background:${dc}">${esc(d.s)}</span><span>${esc(d.n)}</span>${p.g ? `<em>${esc(p.g)}</em>` : ""}</div>
+      <div class="pj-dev">${devBadge(d)}<span>${esc(d.n)}</span>${p.g ? `<em>${esc(p.g)}</em>` : ""}</div>
       <h2>${esc(p.n)}</h2>
       ${p.tag ? `<p class="tagline">${esc(p.tag)}</p>` : ""}
       ${p.addr ? `<div class="pj-loc"><svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>${esc(p.addr)}${p.a ? " · vị trí tham khảo" : ""}</div>` : ""}

@@ -127,17 +127,17 @@ def locate(name, ct_name, addr):
 # Màu chủ đạo theo logo CĐT (tra 19/11/2026) — tô ghim + tag tên dự án. "?" = chưa xác minh được, chị kiểm lại.
 LOGO = {
     "masterise": "#9a7642",   # vàng đồng (logo Masterise Homes)
-    "vin": "#213f7d",         # xanh navy + vàng kim (mô tả logo Vinhomes trên các trang thiết kế)
+    "vin": "#b8862b",         # vàng kim (đo từ logo Vinhomes)
     "khangdien": "#2f8a3e",   # chữ K hai mảng xanh dương – xanh lá
-    "phulong": "#2a62a8",     # ? chưa tìm được mô tả, giữ màu cũ
+    "phulong": "#0f5f5f",     # xanh cổ vịt + viền vàng (đo từ logo phulong.com)
     "namlong": "#9c0204",     # đỏ đô (phân tích ảnh logo Nam Long)
-    "sonkim": "#a8822f",      # ba dải vàng + chữ xanh than
+    "sonkim": "#9c8645",      # ba dải vàng + chữ xanh than (đo từ logo)
     "mik": "#001a71",         # xanh đậm #001A71 + đỏ #E20602
-    "novaland": "#1f8f4e",    # khối Rubik xanh lá (Báo Pháp Luật)
-    "hungthinh": "#c8102e",   # ? chưa xác minh
+    "novaland": "#3f8f2a",    # khối Rubik xanh lá (đo từ logo novaland.com.vn)
+    "hungthinh": "#e8780e",   # cam (đo từ logo Hưng Thịnh Land)
     "datxanh": "#13294b",     # BLUEMARQ: navy đậm + vàng đồng
-    "phatdat": "#0b5aa6",     # ? chưa xác minh
-    "angia": "#e36c1e",       # ? chưa xác minh
+    "phatdat": "#d02020",     # đỏ + vàng, xanh (đo từ logo phatdat.com.vn)
+    "angia": "#e36c1e",       # ? chưa xác minh (web angia.com.vn không vào được)
     "keppel": "#e51d37",      # đỏ — màu nhận diện chung của Keppel từ 3/2020
     "capitaland": "#004289",  # xanh đậm (logo 2025)
     "hkland": "#0d2940",      # xanh navy (Brandfetch)
@@ -146,6 +146,10 @@ data = json.load(open("docs/data/projects.json"))
 data["dev"].update(DEV)
 for k, c in LOGO.items():
     if k in data["dev"]: data["dev"][k]["c"] = c
+# logo CĐT (pipeline/dev_logos.py) — hiện thay chữ viết tắt; CĐT chưa có logo thì giữ chữ viết tắt
+for k, v in data["dev"].items():
+    if os.path.exists(f"docs/logos/{k}.png"): v["logo"] = f"logos/{k}.png"
+    else: v.pop("logo", None)
 pid = lambda d, n: d + "-" + re.sub(r"[^a-z0-9]+", "-", norm(n)).strip("-")
 new_ids = {pid(r[0], r[1]) for r in P}
 data["projects"] = [p for p in data["projects"] if p["d"] not in DEV and p["id"] not in new_ids]
