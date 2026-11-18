@@ -301,7 +301,7 @@ function initMetro3D() {
     const g = staticGeo(R);
     const st = STATIC.includes(key);
     set("mt-track", st ? FC([]) : g.track); set("mt-deck", st ? FC([]) : g.deck); set("mt-piers", st ? FC([]) : g.piers); set("mt-tun", g.tun); set("mt-portal", g.portals);
-    const dur = Math.max(45, Math.min(100, R.len / 220)); // giây cho cả tuyến
+    const dur = Math.max(22.5, Math.min(50, R.len / 440)); // giây cho cả tuyến (nhanh gấp đôi bản gốc theo yêu cầu chị)
     PLAY = { key, R, s: 0, v: R.len / dur, follow: true, last: performance.now(), brg: null, paused: false };
     const nm = lineName(key);
     bar.innerHTML = `<i style="width:6px;align-self:stretch;border-radius:3px;background:${LCOL}"></i><div class="t"><b>${nm}</b><span id="mtInfo">—</span></div>
@@ -351,7 +351,7 @@ function initMetro3D() {
       const back = at(R, sA - 90).p, fwd = at(R, sA + 140).p, fwd2 = at(R, sA + 260).p;
       const a1 = angOf(back, fwd), a2 = angOf(fwd, fwd2);
       const hdg = (90 - Math.atan2(Math.sin(a1) * .6 + Math.sin(a2) * .4, Math.cos(a1) * .6 + Math.cos(a2) * .4) * 180 / Math.PI + 360) % 360;
-      const tgt = at(R, sA - 20).p, k = 1 - Math.exp(-dt * 3.2), kb = 1 - Math.exp(-dt * 2.2);
+      const tgt = at(R, sA - 20).p, k = 1 - Math.exp(-dt * 6.4), kb = 1 - Math.exp(-dt * 3.2); // tàu nhanh x2 → camera bám nhanh x2 để giữ khoảng cách, vẫn nội suy mũ cho mượt
       if (!P.cam) { const c = map.getCenter(); P.cam = { x: c.lng, y: c.lat, b: map.getBearing(), p: map.getPitch(), z: map.getZoom() }; }
       const C = P.cam, zT = here.u ? 17.2 : 17.4, pT = here.u ? 58 : 62;
       C.x += (tgt[0] - C.x) * k; C.y += (tgt[1] - C.y) * k;
