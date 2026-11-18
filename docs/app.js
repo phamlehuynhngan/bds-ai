@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611181430";
+const V = "?v=202611181500";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -145,7 +145,7 @@ function showProject(id) {
   const p = D.prj.projects.find(x => x.id === id); if (!p) return;
   const d = devOf(p), st = nearestStation(p.ll[0], p.ll[1]), pp = D.pp?.[p.id] || {}, low = pp.kind === "thap_tang", r = low ? null : valuate(p.ll[0], p.ll[1], {}, p.id);
   $("#pjList").hidden = true; $("#pjDetail").hidden = false;
-  $("#pjDetail").innerHTML = `<button class="back" id="pjBack">‹ Danh sách dự án</button>
+  $("#pjDetail").innerHTML = `<button class="back" id="pjBack"><i>‹</i> Danh sách dự án</button>
     <h2>${esc(p.n)}</h2><div class="sub">Chủ đầu tư: <b>${esc(d.n)}</b>${p.g ? " · " + esc(p.g) : ""}</div>
     ${p.tag ? `<div class="tagline">${esc(p.tag)}</div>` : ""}
     <dl class="kv">${p.addr ? `<dt>Địa chỉ</dt><dd>${esc(p.addr)}${p.a ? " (vị trí tham khảo)" : ""}</dd>` : ""}
