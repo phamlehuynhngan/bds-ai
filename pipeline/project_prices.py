@@ -42,7 +42,14 @@ ALIAS = {
     "Dragon Hill 2": ["Dragon Hill Residence And Suites 2 (Dragon hill 2)"],
     "Safira Khang Điền": ["Safira Khang Điền (Sapphire Khang Điền)"],
     "Akari City": ["Akari City", "Akari City Nam Long"],
+    "Q7 Saigon Riverside Complex": ["Saigon Riverside Complex Q7"],
+    "River Panorama": ["River Panorama (The Garden Bay)"],
+    "Grand Manhattan": ["The Grand Manhattan"],
+    "RichStar": ["Căn hộ RichStar"],
+    "Palm City": ["Palm Heights", "Palm Residence", "Palm City"],
+    "d'Edge Thảo Điền": ["d'Edge", "D'Edge Thảo Điền"],
 }
+EXACT = {"Sunrise City", "The Estella", "Empire City"}  # tên là phần đầu của dự án khác (Sunrise CityView, Estella Heights…)
 LOW_RISE = {"The Rivus"}  # dinh thự / biệt thự dù không thuộc nhóm "Nhà phố – Biệt thự"
 
 def build():
@@ -58,7 +65,8 @@ def build():
             out[p["id"]] = {"kind": "thap_tang", "note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."}
             continue
         names = [norm(a) for a in ALIAS.get(p["n"], [])] or [norm(p["n"]).replace(" saigon", "")]
-        m = df[df.pn.apply(lambda s: any(s == k or (len(k) > 6 and k in s) for k in names))]
+        ex = p["n"] in EXACT
+        m = df[df.pn.apply(lambda s: any(s == k or (not ex and len(k) > 6 and k in s) for k in names))]
         if len(m) >= 3:
             q1, med, q3 = np.percentile(m.ppm2, [25, 50, 75])
             out[p["id"]] = {"kind": "chotot", "mid": round(med, 1), "lo": round(q1, 1), "hi": round(q3, 1), "n": int(len(m)),

@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611181700";
+const V = "?v=202611182000";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -44,7 +44,6 @@ function explain(x) { // Saabas: đóng góp theo đường quyết định củ
 const DEFAULT_APT = {size: 70, rooms: 2, toilets: 2, furnishing_sell: 2, property_legal_document: 6, property_status: 2, apartment_type: 1};
 /** Giá thị trường tham khảo của dự án (id) hoặc null */
 function market(pid) { if (pid && typeof pid === "object") return pid.mid ? pid : null; const m = pid && D.pp?.[pid]; return m && m.mid ? m : null; }
-const moreMarket = o => o.ppm2 ? {mid: o.ppm2, lo: o.ppm2, hi: o.ppm2, kind: "chotot", n: o.ads, note: `Trung vị giá rao căn hộ trên Chợ Tốt Nhà (${o.ads} tin, 11/2026)`} : null;
 /** Định giá tại (lat, lon) cho căn hộ apt. Nếu biết dự án (pid) có giá thị trường:
  *  giá ước tính = giá thị trường dự án × (mô hình[căn này] / mô hình[căn tham chiếu 70 m², 2 PN]) */
 function valuate(lat, lon, apt = {}, pid = null) {
@@ -122,7 +121,7 @@ function filteredProjects() {
 const pjRow = p => { const d = devOf(p); return `<button class="item" data-id="${p.id}"><span class="dot" style="background:${d.c}">${esc(d.s)}</span><b>${esc(p.n)}</b><small>${p.addr ? esc(p.addr) : esc(d.n)}</small></button>`; };
 function renderProjects() {
   const cnt = {}; D.prj.projects.forEach(p => cnt[p.d] = (cnt[p.d] || 0) + 1);
-  $("#pjCount").textContent = `${(D.prj.projects.length + (D.more || []).length).toLocaleString("vi-VN")} dự án · bấm vào chủ đầu tư hoặc loại hình để xem`;
+  $("#pjCount").textContent = `${D.prj.projects.length} dự án · bấm vào chủ đầu tư để xem`;
   if (state.q) {
     const ps = filteredProjects();
     $("#devAcc").innerHTML = ps.length ? ps.map(pjRow).join("") : `<div class="empty">Không có dự án khớp “${esc(state.q)}”.</div>`;
@@ -211,7 +210,6 @@ function sugBase() {
   return D._sug = [
     ...D.prj.projects.map(p => ({n: p.n, sub: "Dự án · " + devOf(p).n, lat: p.ll[0], lon: p.ll[1], pid: p.id, k: "pj", g: "Dự án"})),
     ...(D.rivals || []).map(r => ({n: r[0], sub: "Dự án · " + r[1], lat: r[2], lon: r[3], k: "pj2", g: "Dự án khác"})),
-    ...(D.more || []).map(o => ({n: o.n, sub: OT[o.t] + (o.dist ? " · " + o.dist : ""), lat: o.ll[0], lon: o.ll[1], k: "pj2", g: "Dự án khác"})),
     ...(D.anchors || []).map(a => ({n: a[0], sub: AGRP[a[1]] || "Tiện ích", lat: a[3], lon: a[4], k: "am", g: "Tiện ích nổi bật", t: a[2]})),
     ...DESTS.filter(d => !(D.anchors || []).some(a => norm(a[0]) === norm(d[0]))).map(d => ({n: d[0], sub: "Địa điểm nổi bật", lat: d[1], lon: d[2], k: "poi", g: "Tiện ích nổi bật"})),
     ...D.metro.stations.map(s => ({n: "Ga " + s[0], sub: "Metro số 1", lat: s[1], lon: s[2], k: "st", g: "Ga Metro số 1"}))];
@@ -308,65 +306,13 @@ async function runIso() {
 $("#rtModes").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; state.rtMode = b.dataset.m; $("#rtModes").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === b)); rerun(); };
 $("#rtIso").onclick = () => runIso();
 
-/* ================= dự án khác tại TP.HCM ================= */
-const OT = {cao: "Căn hộ – cao tầng", thap: "Biệt thự – nhà phố"}, OC = {cao: "#6d7f8f", thap: "#9a7f5a"};
-const otherRow = o => `<button class="item" data-o="${o.id}"><span class="dot" style="background:${OC[o.t]}">${o.t === "cao" ? "CH" : "BT"}</span><b>${esc(o.n)}</b><small>${esc([o.dist, o.ppm2 ? `~${fmt(o.ppm2, 0)} tr/m²` : ""].filter(Boolean).join(" · ") || OT[o.t])}</small></button>`;
-function renderOthers() {
-  const M = D.more || [], q = norm(state.q);
-  if (q) { const hit = M.filter(o => norm(o.n + " " + o.dist).includes(q));
-    $("#moreAcc").innerHTML = hit.length ? hit.slice(0, 60).map(otherRow).join("") : ""; $("#moreH").hidden = !hit.length; return; }
-  $("#moreH").hidden = false;
-  $("#moreAcc").innerHTML = ["cao", "thap"].map(t => { const L = M.filter(o => o.t === t), open = state.otype === t;
-    return `<div class="dev ${open ? "open" : ""}"><button class="dev-h" data-t="${t}"><span class="dot" style="background:${OC[t]}">${t === "cao" ? "CH" : "BT"}</span><b>${OT[t]}</b><small>${L.length} dự án</small><i>▾</i></button>
-      ${open ? `<div class="dev-b">${L.map(otherRow).join("")}</div>` : ""}</div>`; }).join("");
-  if (map?.getLayer("pjo")) map.setFilter("pjo", state.otype ? ["==", ["get", "t"], state.otype] : null);
-}
-$("#moreAcc").addEventListener("click", e => {
-  const it = e.target.closest(".item"); if (it) { showOther(it.dataset.o); return; }
-  const h = e.target.closest(".dev-h"); if (!h) return;
-  state.otype = state.otype === h.dataset.t ? null : h.dataset.t; renderOthers();
-  if (state.otype) { stopOrbit(); fitPoints(D.more.filter(o => o.t === state.otype).map(o => o.ll), 13); }
-});
-function showOther(id) {
-  const o = (D.more || []).find(x => x.id === id); if (!o) return;
-  const st = nearestStation(o.ll[0], o.ll[1]), low = o.t === "thap", mk = moreMarket(o), r = low ? null : valuate(o.ll[0], o.ll[1], {}, mk), dc = OC[o.t];
-  const stat = (lbl, val, sub) => `<div class="stat"><span>${lbl}</span><b>${val}</b><small>${sub}</small></div>`;
-  $("#pjList").hidden = true; $("#pjDetail").hidden = false;
-  $("#pjDetail").innerHTML = `<button class="back" id="pjBack"><i>‹</i> Danh sách dự án</button>
-    <header class="pj-hero" style="--dc:${dc}">
-      <div class="pj-dev"><span class="dot" style="background:${dc}">${low ? "BT" : "CH"}</span><span>Dự án khác tại TP.HCM</span><em>${OT[o.t]}</em></div>
-      <h2>${esc(o.n)}</h2>
-      ${o.dist ? `<div class="pj-loc"><svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>${esc(o.dist)}</div>` : ""}
-    </header>
-    <div class="pj-stats">
-      ${low ? stat("Giá bán", "Theo căn", "Biệt thự – nhà phố") : stat("Giá rao", o.ppm2 ? fmt(o.ppm2, 0) : "—", o.ppm2 ? "triệu/m² · trung vị" : "chưa đủ tin rao")}
-      ${low ? "" : stat("Ước tính AI", fmt(r.gia_trieu_m2, 0), `triệu/m² · 70 m² ≈ ${fmt(r.tong_ty, 1)} tỷ`)}
-      ${stat("Metro số 1", fmt(st.d) + " km", "Ga " + esc(st.n))}
-    </div>
-    <section class="pj-card"><h3>Thông tin</h3><div class="facts">
-      <div class="fact"><span>Loại hình</span><b>${OT[o.t]}</b></div>
-      <div class="fact"><span>Tin rao đang bán</span><b>${o.ads ? o.ads + " tin" : "—"}</b></div>
-      <div class="fact"><span>Nguồn dữ liệu</span><b>${esc(o.src)}</b></div></div>
-      <p class="pj-note" style="margin-top:10px">Vị trí theo điểm dự án trên nguồn dữ liệu, mang tính tham khảo. Chủ đầu tư và mô tả chi tiết đang cập nhật.</p></section>
-    <div class="pj-actions">
-      ${low ? "" : `<button class="btn" id="pjValue">Định giá chi tiết</button>`}
-      <button class="btn alt" id="pjMove">Kết nối</button></div>`;
-  $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); stopOrbit(); };
-  $("#pjMove").onclick = () => { setTab("move"); setOriginPt([o.ll[1], o.ll[0]], o.n); };
-  if ($("#pjValue")) $("#pjValue").onclick = () => { setTab("price"); setPick(o.ll[0], o.ll[1], o.n, OT[o.t], mk); };
-  map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: [o.ll[1], o.ll[0]]}});
-  stopOrbit(); window.metroStop?.();
-  map.flyTo({center: [o.ll[1], o.ll[0]], zoom: 16.2, pitch: 60, bearing: map.getBearing() - 30, duration: 1800, essential: true});
-  map.once("moveend", () => startOrbit());
-}
-
 $("#devAcc").addEventListener("click", e => {
   const it = e.target.closest(".item"); if (it) { showProject(it.dataset.id); return; }
   const h = e.target.closest(".dev-h"); if (!h) return;
   state.dev = state.dev === h.dataset.d ? "all" : h.dataset.d; renderProjects();
   stopOrbit(); fitPoints((state.dev === "all" ? D.prj.projects : filteredProjects()).map(p => p.ll), 14);
 });
-$("#pjSearch").addEventListener("input", e => { state.q = e.target.value.trim(); renderProjects(); renderOthers(); });
+$("#pjSearch").addEventListener("input", e => { state.q = e.target.value.trim(); renderProjects(); });
 
 /* ================= xoay bản đồ 3D ================= */
 let orbitRAF = null, orbitLast = 0;
@@ -412,8 +358,8 @@ function showHits(points, fit = true) { // points: [{lat, lon, label}]
 
 /* ================= điều hướng tab ================= */
 const LAYERS = {
-  projects: ["pjo", "pjo-t", "pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "towers"],
-  move: ["pjo", "pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
+  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "towers"],
+  move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
   metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d", "towers"],
   price: ["grid", "ls", "pj", "metro-l", "metro-s"],
   chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
@@ -440,7 +386,7 @@ $("#lyProjects").onchange = e => map.setLayoutProperty("pj", "visibility", e.tar
 /* ================= khởi động ================= */
 async function boot() {
   const j = u => fetch("data/" + u + V).then(r => r.json());
-  [D.model, D.trees, D.poi, D.metro, D.prj, D.list, D.infra, D.pp, D.anchors, D.rivals, D.more] = await Promise.all(["model.json", "trees.json", "poi.json", "metro.json", "projects.json", "listings.json", "infra.json", "project_prices.json", "anchors.json", "rivals.json", "more_projects.json"].map(j));
+  [D.model, D.trees, D.poi, D.metro, D.prj, D.list, D.infra, D.pp, D.anchors, D.rivals] = await Promise.all(["model.json", "trees.json", "poi.json", "metro.json", "projects.json", "listings.json", "infra.json", "project_prices.json", "anchors.json", "rivals.json"].map(j));
   F = D.model.features;
   $("#mode").innerHTML = MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
   $("#disc").innerHTML = `Giá tin rao là giá chào bán, không phải giá giao dịch, sai số trung bình ${fmt(D.model.results[3]["MAPE_%"])}% so với thực tế. Kết quả chỉ để tham khảo. Nguồn Internet.`;
@@ -482,9 +428,6 @@ async function boot() {
     map.addSource("pjp", {type: "geojson", data: FC(D.prj.projects.filter(p => p.poly).map(p => ({type: "Feature", properties: {id: p.id, c: devOf(p).c, dv: p.d}, geometry: p.poly})))});
     map.addLayer({id: "pjp-f", type: "fill", source: "pjp", paint: {"fill-color": ["get", "c"], "fill-opacity": .12}}, first);
     map.addLayer({id: "pjp-l", type: "line", source: "pjp", paint: {"line-color": ["get", "c"], "line-width": 1.5, "line-opacity": .7}});
-    map.addSource("pjo", {type: "geojson", data: FC(D.more.map(o => ({type: "Feature", properties: {id: o.id, n: o.n, t: o.t}, geometry: {type: "Point", coordinates: [o.ll[1], o.ll[0]]}})))});
-    map.addLayer({id: "pjo", type: "circle", source: "pjo", paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.6, 15, 5.5], "circle-color": ["match", ["get", "t"], "thap", OC.thap, OC.cao], "circle-stroke-color": "#fff", "circle-stroke-width": 1.4, "circle-opacity": .9}});
-    map.addLayer({id: "pjo-t", type: "symbol", source: "pjo", minzoom: 14.2, layout: {"text-field": ["get", "n"], "text-size": 11, "text-offset": [0, 1], "text-anchor": "top", "text-font": ["Noto Sans Regular"], "text-max-width": 10, "text-optional": true}, paint: {"text-color": "#5e4a31", "text-halo-color": "#fff", "text-halo-width": 1.3}});
     map.addSource("pj", {type: "geojson", data: FC(pf)});
     map.addLayer({id: "pj", type: "circle", source: "pj", paint: {"circle-radius": 6, "circle-color": ["get", "c"], "circle-stroke-color": "#fff", "circle-stroke-width": 2}});
     map.addLayer({id: "pj-t", type: "symbol", source: "pj", minzoom: 12.5, layout: {"text-field": ["get", "n"], "text-size": 11.5, "text-offset": [0, 1.1], "text-anchor": "top", "text-font": ["Noto Sans Regular"]}, paint: {"text-color": "#3b2a14", "text-halo-color": "#fff", "text-halo-width": 1.4}});
@@ -494,20 +437,18 @@ async function boot() {
     map.addLayer({id: "hits-t", type: "symbol", source: "hits", minzoom: 11, layout: {"text-field": ["get", "t"], "text-size": 11.5, "text-offset": [0, 1.1], "text-anchor": "top", "text-font": ["Noto Sans Regular"], "text-max-width": 12}, paint: {"text-color": "#3b2a14", "text-halo-color": "#fff", "text-halo-width": 1.4}});
     map.addSource("pick", {type: "geojson", data: FC([])});
     map.addLayer({id: "pick", type: "circle", source: "pick", paint: {"circle-radius": 10, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#3b2a14", "circle-stroke-width": 3}});
-    setMode("p"); renderProjects(); renderOthers(); setTab(state.tab); startOrbit(2.5);
+    setMode("p"); renderProjects(); setTab(state.tab); startOrbit(2.5);
     map.on("click", e => {
-      const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0], fo = !f && map.getLayer("pjo") ? map.queryRenderedFeatures(e.point, {layers: ["pjo"]})[0] : null;
-      if (state.tab === "projects") { if (f) showProject(f.properties.id); else if (fo) showOther(fo.properties.id); return; }
+      const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0];
+      if (state.tab === "projects") { if (f) showProject(f.properties.id); return; }
       if (state.tab === "move") {
         if (state.pickMode === "to") { state.pickMode = null; $("#mvDest").value = "Điểm đã chọn trên bản đồ"; runRoute([e.lngLat.lng, e.lngLat.lat], "điểm đã chọn"); return; }
         if (state.pickMode === "from") { state.pickMode = null; setOriginPt([e.lngLat.lng, e.lngLat.lat], "Điểm đã chọn trên bản đồ"); return; }
-        if (f) setOrigin(f.properties.id); else if (fo) { const o = D.more.find(x => x.id === fo.properties.id); $("#mvFrom").value = o.n; setOriginPt([o.ll[1], o.ll[0]], o.n); } return; }
+        if (f) setOrigin(f.properties.id); return; }
       if (state.tab === "price") { if (f) { const [lon, lat] = f.geometry.coordinates; setPick(lat, lon, f.properties.n, "Chủ đầu tư: " + esc(f.properties.d), f.properties.id); } else setPick(e.lngLat.lat, e.lngLat.lng); }
       if (state.tab === "metro" && f) { setTab("projects"); showProject(f.properties.id); }
     });
-    map.on("mousemove", "pjo", e => { const p = e.features[0].properties; pop.setLngLat(e.lngLat).setHTML(`<b>${esc(p.n)}</b><br>${OT[p.t]}`).addTo(map); });
-    map.on("mouseleave", "pjo", () => pop.remove());
-    for (const l of ["pj", "ls", "pjo"]) { map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", l, () => map.getCanvas().style.cursor = ""); }
+    for (const l of ["pj", "ls"]) { map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", l, () => map.getCanvas().style.cursor = ""); }
     var pop = new maplibregl.Popup({closeButton: false, offset: 10});
     map.on("mousemove", "ls", e => { const p = e.features[0].properties; pop.setLngLat(e.lngLat).setHTML(`<b>${fmt(+p.p)} triệu/m²</b> · ${p.s} m²${p.n ? `<br>${esc(p.n)}` : ""}`).addTo(map); });
     map.on("mousemove", "pj", e => { const p = e.features[0].properties; pop.setLngLat(e.lngLat).setHTML(`<b>${esc(p.n)}</b><br>${esc(p.d)}`).addTo(map); });

@@ -9,7 +9,8 @@ API = "https://gateway.chotot.com/v1/public/ad-listing"
 KEEP = ["ad_id", "list_id", "list_time", "price", "size", "price_million_per_m2", "rooms", "toilets",
         "latitude", "longitude", "area_v2", "area_name", "ward", "ward_name", "street_name",
         "projectid", "pty_project_name", "apartment_type", "furnishing_sell", "property_legal_document",
-        "property_status", "company_ad", "type", "category"]
+        "property_status", "company_ad", "type", "category",
+        "floornumber", "balconydirection", "direction", "pty_project_transaction_status", "pty_project_type"]
 OUT = os.path.join(os.path.dirname(__file__), "..", "data", "raw_chotot.jsonl")
 
 def get(params):

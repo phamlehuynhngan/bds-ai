@@ -61,19 +61,19 @@
 },
 "masteri-thao-dien": {
 "kind": "chotot",
-"mid": 115.7,
-"lo": 110.4,
-"hi": 124.1,
-"n": 8,
-"note": "Trung vị 8 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"mid": 112.6,
+"lo": 107.4,
+"hi": 120.7,
+"n": 10,
+"note": "Trung vị 10 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "masteri-an-phu": {
 "kind": "chotot",
-"mid": 107.0,
-"lo": 102.9,
-"hi": 109.9,
-"n": 4,
-"note": "Trung vị 4 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"mid": 104.3,
+"lo": 104.3,
+"hi": 109.6,
+"n": 5,
+"note": "Trung vị 5 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "lumiere-riverside": {
 "kind": "chotot",
@@ -93,19 +93,19 @@
 },
 "masteri-centre-point": {
 "kind": "chotot",
-"mid": 65.0,
-"lo": 56.4,
-"hi": 75.1,
-"n": 17,
-"note": "Trung vị 17 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"mid": 71.1,
+"lo": 59.8,
+"hi": 77.9,
+"n": 13,
+"note": "Trung vị 13 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "lumiere-boulevard": {
 "kind": "chotot",
-"mid": 61.6,
-"lo": 58.5,
-"hi": 71.6,
-"n": 11,
-"note": "Trung vị 11 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"mid": 64.1,
+"lo": 55.5,
+"hi": 77.1,
+"n": 8,
+"note": "Trung vị 8 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "metropole": {
 "kind": "rao_ban",
@@ -149,11 +149,11 @@
 },
 "vh-grand-park": {
 "kind": "chotot",
-"mid": 45.3,
-"lo": 40.0,
-"hi": 54.1,
-"n": 130,
-"note": "Trung vị 130 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"mid": 46.9,
+"lo": 42.3,
+"hi": 54.7,
+"n": 105,
+"note": "Trung vị 105 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "vh-green-paradise": {
 "kind": "du_kien",
@@ -218,10 +218,10 @@
 "pl-dragon-hill-2": {
 "kind": "chotot",
 "mid": 60.0,
-"lo": 58.8,
-"hi": 62.4,
-"n": 16,
-"note": "Trung vị 16 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"lo": 58.9,
+"hi": 63.4,
+"n": 15,
+"note": "Trung vị 15 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "pl-kim-long": {
 "kind": "thap_tang",
@@ -234,18 +234,18 @@
 "nl-mizuki": {
 "kind": "chotot",
 "mid": 59.3,
-"lo": 55.9,
-"hi": 62.9,
-"n": 57,
-"note": "Trung vị 57 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"lo": 56.2,
+"hi": 63.1,
+"n": 56,
+"note": "Trung vị 56 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "nl-akari": {
 "kind": "chotot",
-"mid": 58.0,
+"mid": 58.8,
 "lo": 53.1,
-"hi": 61.7,
-"n": 35,
-"note": "Trung vị 35 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"hi": 62.0,
+"n": 33,
+"note": "Trung vị 33 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 },
 "nl-waterpoint": {
 "kind": "none",
@@ -285,10 +285,346 @@
 },
 "mik-park-residence": {
 "kind": "chotot",
-"mid": 44.0,
+"mid": 44.2,
 "lo": 41.0,
+"hi": 45.8,
+"n": 35,
+"note": "Trung vị 35 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-sunrise-city": {
+"kind": "chotot",
+"mid": 77.1,
+"lo": 75.7,
+"hi": 88.8,
+"n": 9,
+"note": "Trung vị 9 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-sunrise-cityview": {
+"kind": "chotot",
+"mid": 68.4,
+"lo": 65.4,
+"hi": 70.6,
+"n": 27,
+"note": "Trung vị 27 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-sunrise-riverside": {
+"kind": "chotot",
+"mid": 64.8,
+"lo": 63.9,
+"hi": 71.2,
+"n": 9,
+"note": "Trung vị 9 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-the-sun-avenue": {
+"kind": "chotot",
+"mid": 86.8,
+"lo": 84.2,
+"hi": 89.3,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-lexington-residence": {
+"kind": "chotot",
+"mid": 69.1,
+"lo": 67.8,
+"hi": 70.5,
+"n": 11,
+"note": "Trung vị 11 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-victoria-village": {
+"kind": "chotot",
+"mid": 89.3,
+"lo": 85.3,
+"hi": 90.5,
+"n": 7,
+"note": "Trung vị 7 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-lakeview-city": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"novaland-orchard-park-view": {
+"kind": "chotot",
+"mid": 84.1,
+"lo": 83.3,
+"hi": 94.0,
+"n": 8,
+"note": "Trung vị 8 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-golden-mansion": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"novaland-kingston-residence": {
+"kind": "chotot",
+"mid": 90.0,
+"lo": 89.1,
+"hi": 100.3,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-newton-residence": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"novaland-the-botanica": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"novaland-botanica-premier": {
+"kind": "chotot",
+"mid": 77.5,
+"lo": 75.4,
+"hi": 80.1,
+"n": 7,
+"note": "Trung vị 7 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-galaxy-9": {
+"kind": "chotot",
+"mid": 100.0,
+"lo": 95.1,
+"hi": 101.7,
+"n": 5,
+"note": "Trung vị 5 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-rivergate-residence": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"novaland-saigon-royal-residence": {
+"kind": "chotot",
+"mid": 139.8,
+"lo": 136.8,
+"hi": 155.8,
+"n": 7,
+"note": "Trung vị 7 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-the-tresor": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"novaland-grand-manhattan": {
+"kind": "chotot",
+"mid": 232.9,
+"lo": 228.6,
+"hi": 253.8,
+"n": 5,
+"note": "Trung vị 5 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-richstar": {
+"kind": "chotot",
+"mid": 53.8,
+"lo": 51.5,
+"hi": 58.9,
+"n": 15,
+"note": "Trung vị 15 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"novaland-wilton-tower": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"hungthinh-moonlight-park-view": {
+"kind": "chotot",
+"mid": 60.3,
+"lo": 58.7,
+"hi": 62.1,
+"n": 10,
+"note": "Trung vị 10 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"hungthinh-moonlight-boulevard": {
+"kind": "chotot",
+"mid": 52.7,
+"lo": 51.6,
+"hi": 53.5,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"hungthinh-moonlight-residences": {
+"kind": "chotot",
+"mid": 65.4,
+"lo": 64.3,
+"hi": 66.7,
+"n": 3,
+"note": "Trung vị 3 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"hungthinh-q7-saigon-riverside-complex": {
+"kind": "chotot",
+"mid": 53.4,
+"lo": 52.7,
+"hi": 55.7,
+"n": 5,
+"note": "Trung vị 5 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"hungthinh-q7-boulevard": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"hungthinh-lavita-charm": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"hungthinh-richmond-city": {
+"kind": "chotot",
+"mid": 72.1,
+"lo": 68.4,
+"hi": 73.8,
+"n": 4,
+"note": "Trung vị 4 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"hungthinh-melody-residences": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"hungthinh-saigon-gateway": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"datxanh-sunview-town": {
+"kind": "chotot",
+"mid": 44.4,
+"lo": 43.6,
 "hi": 45.5,
-"n": 34,
-"note": "Trung vị 34 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+"n": 10,
+"note": "Trung vị 10 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"datxanh-opal-riverside": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"datxanh-opal-garden": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"datxanh-luxgarden": {
+"kind": "chotot",
+"mid": 49.9,
+"lo": 48.6,
+"hi": 51.5,
+"n": 12,
+"note": "Trung vị 12 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"phatdat-the-everrich-infinity": {
+"kind": "chotot",
+"mid": 99.4,
+"lo": 98.8,
+"hi": 100.0,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"phatdat-the-everrich-1": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"angia-west-gate": {
+"kind": "chotot",
+"mid": 43.4,
+"lo": 41.6,
+"hi": 45.2,
+"n": 30,
+"note": "Trung vị 30 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"angia-an-gia-garden": {
+"kind": "chotot",
+"mid": 60.9,
+"lo": 60.2,
+"hi": 62.0,
+"n": 12,
+"note": "Trung vị 12 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"angia-an-gia-star": {
+"kind": "chotot",
+"mid": 37.0,
+"lo": 34.2,
+"hi": 37.5,
+"n": 5,
+"note": "Trung vị 5 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"angia-an-gia-riverside": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"angia-sky-89": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"angia-river-panorama": {
+"kind": "chotot",
+"mid": 66.4,
+"lo": 64.8,
+"hi": 68.5,
+"n": 3,
+"note": "Trung vị 3 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"keppel-empire-city": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"keppel-the-estella": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"keppel-estella-heights": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"keppel-palm-city": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"keppel-riviera-point": {
+"kind": "chotot",
+"mid": 86.3,
+"lo": 80.8,
+"hi": 96.0,
+"n": 4,
+"note": "Trung vị 4 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"keppel-celesta-rise": {
+"kind": "chotot",
+"mid": 73.8,
+"lo": 59.8,
+"hi": 81.1,
+"n": 7,
+"note": "Trung vị 7 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"keppel-saigon-sports-city": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"capitaland-d-edge-thao-ien": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"capitaland-vista-verde": {
+"kind": "chotot",
+"mid": 100.6,
+"lo": 95.4,
+"hi": 107.5,
+"n": 6,
+"note": "Trung vị 6 tin rao bán trên Chợ Tốt Nhà (11/2026)"
+},
+"capitaland-the-vista-an-phu": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"capitaland-feliz-en-vista": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"capitaland-de-la-sol": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"hkland-the-nassim": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"hkland-the-marq": {
+"kind": "chotot",
+"mid": 202.8,
+"lo": 194.4,
+"hi": 212.1,
+"n": 5,
+"note": "Trung vị 5 tin rao bán trên Chợ Tốt Nhà (11/2026)"
 }
 }
