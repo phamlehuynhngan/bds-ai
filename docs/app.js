@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611190900";
+const V = "?v=202611190930";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
