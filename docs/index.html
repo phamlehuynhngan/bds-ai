@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
-<link rel="stylesheet" href="app.css?v=202611181000">
+<link rel="stylesheet" href="app.css?v=202611181230">
 </head>
 <body data-tab="projects">
 <header class="top">
@@ -82,11 +82,12 @@
     <div class="sub">Thời gian đi từ dự án tới các điểm trong thành phố.</div>
     <div class="sec">
       <h3>Điểm xuất phát</h3>
-      <select class="sel" id="mvFrom"></select>
+      <div class="combo"><input id="mvFrom" placeholder="Tìm dự án, địa chỉ, địa điểm…" autocomplete="off"><div class="sug" id="mvFromSug" hidden></div></div>
       <h3 style="margin-top:14px">Phương tiện</h3>
       <div class="chips" id="rtModes"></div>
       <h3 style="margin-top:6px">Nơi đến</h3>
-      <div class="rt-row"><select id="mvDest"></select><button class="btn alt sm" id="rtIso">Vùng 30 phút</button></div>
+      <div class="combo"><input id="mvDest" placeholder="Tìm bất kỳ địa điểm nào ở TP.HCM…" autocomplete="off"><div class="sug" id="mvDestSug" hidden></div></div>
+      <button class="btn alt sm" id="rtIso" style="margin-top:10px">Vùng 30 phút từ điểm xuất phát</button>
     </div>
     <div id="rtOut"><div class="empty">Chọn dự án xuất phát (hoặc bấm ghim dự án trên bản đồ).</div></div>
   </section>
@@ -117,9 +118,9 @@
 </dialog>
 
 <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script src="app.js?v=202611181000"></script>
-<script src="route.js?v=202611181000"></script>
-<script src="metro3d.js?v=202611181000"></script>
-<script type="module" src="chat.js?v=202611181000"></script>
+<script src="app.js?v=202611181230"></script>
+<script src="route.js?v=202611181230"></script>
+<script src="metro3d.js?v=202611181230"></script>
+<script type="module" src="chat.js?v=202611181230"></script>
 </body>
 </html>

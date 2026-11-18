@@ -152,3 +152,12 @@ dialog .row button:last-child{padding:8px 16px;border-radius:999px;background:va
 .iso-lg{display:flex;gap:12px;font-size:12px;color:var(--ink-2);margin-top:6px}.iso-lg i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:4px;vertical-align:middle}
 .sel{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--cream);font-size:13.5px}
 #tab-move .sec>h3{margin-bottom:6px}
+.combo{position:relative}
+.combo input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--cream);font-size:13.5px}
+.combo input:focus{outline:none;border-color:var(--gold);background:#fff}
+.sug{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);max-height:320px;overflow:auto;padding:4px}
+.sug button{display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;text-align:left;padding:7px 8px;border-radius:8px}
+.sug button:hover{background:var(--beige)}
+.sug button span{grid-row:span 2;font-size:14px;line-height:20px}
+.sug button b{font-weight:600;font-size:13px;line-height:1.3}.sug button small{color:var(--muted);font-size:11.5px;line-height:1.3}
+.sug-load{font-size:12px;color:var(--muted);padding:6px 10px}

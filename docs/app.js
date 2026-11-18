@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611181000";
+const V = "?v=202611181230";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -170,16 +170,63 @@ const DESTS = [["Chợ Bến Thành", 10.77253, 106.69804], ["Phố đi bộ Ngu
 state.rtMode = "moto"; state.pickMode = null;
 const loadingHTML = t => `<div class="empty"><span class="dots"><i></i><i></i><i></i></span> ${t}</div>`;
 function renderMove() {
-  const ps = [...D.prj.projects].sort((a, b) => a.n.localeCompare(b.n, "vi"));
-  $("#mvFrom").innerHTML = `<option value="">Chọn dự án xuất phát…</option>` + ps.map(p => `<option value="${p.id}">${esc(p.n)}</option>`).join("") + `<option value="map">📍 Chọn trên bản đồ</option>`;
-  $("#mvDest").innerHTML = `<option value="">Chọn nơi đến…</option>` + DESTS.map((d, i) => `<option value="${i}">${esc(d[0])}</option>`).join("") + `<option value="map">📍 Chọn trên bản đồ</option>`;
   $("#rtModes").innerHTML = Object.entries({moto: "Xe máy", car: "Ô tô", metro: "Đi bộ + Metro"}).map(([k, n]) => `<button class="chip ${state.rtMode === k ? "on" : ""}" data-m="${k}">${n}</button>`).join("");
+  combo("mvFrom", "from"); combo("mvDest", "to");
+}
+/* ô tìm kiếm có gợi ý: dự án, điểm nổi bật, ga Metro (tại chỗ) + địa chỉ bất kỳ ở TP.HCM (Nominatim/OSM) */
+const GEO_CACHE = new Map();
+async function geocode(q) {
+  if (GEO_CACHE.has(q)) return GEO_CACHE.get(q);
+  const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=vn&limit=6&viewbox=106.35,11.2,107.05,10.35&bounded=1&accept-language=vi&q=" + encodeURIComponent(q);
+  const r = await fetch(u).then(x => x.json()).catch(() => []);
+  const out = r.map(x => { const parts = x.display_name.split(", "); return {n: x.name || parts[0], sub: parts.slice(1, 4).join(", "), lat: +x.lat, lon: +x.lon, k: "geo"}; });
+  GEO_CACHE.set(q, out); return out;
+}
+function localSug(q, kind) {
+  const n = norm(q), all = [
+    ...D.prj.projects.map(p => ({n: p.n, sub: "Dự án · " + devOf(p).n, lat: p.ll[0], lon: p.ll[1], pid: p.id, k: "pj"})),
+    ...DESTS.map(d => ({n: d[0], sub: "Địa điểm nổi bật", lat: d[1], lon: d[2], k: "poi"})),
+    ...D.metro.stations.map(s => ({n: "Ga " + s[0], sub: "Metro số 1", lat: s[1], lon: s[2], k: "st"}))];
+  if (!n) return kind === "from" ? all.filter(x => x.k === "pj").slice(0, 8) : all.filter(x => x.k === "poi");
+  const hit = all.filter(x => norm(x.n).includes(n));
+  return hit.sort((a, b) => norm(b.n).startsWith(n) - norm(a.n).startsWith(n)).slice(0, 8);
+}
+function combo(id, kind) {
+  const inp = $("#" + id), box = $("#" + id + "Sug"); let timer = null, seq = 0, items = [];
+  const ICON = {pj: "🏢", poi: "⭐", st: "🚇", geo: "📍"};
+  const draw = (list, loading) => {
+    items = list;
+    box.innerHTML = list.map((x, i) => `<button data-i="${i}"><span>${ICON[x.k]}</span><b>${esc(x.n)}</b><small>${esc(x.sub || "")}</small></button>`).join("")
+      + (loading ? `<div class="sug-load">Đang tìm trên bản đồ…</div>` : "")
+      + `<button data-i="map"><span>🖱️</span><b>Chọn trên bản đồ</b><small>Bấm một điểm bất kỳ</small></button>`;
+    box.hidden = false;
+  };
+  const update = () => {
+    const q = inp.value.trim(), loc = localSug(q, kind), my = ++seq; draw(loc, q.length >= 3);
+    clearTimeout(timer);
+    if (q.length >= 3) timer = setTimeout(async () => { const g = await geocode(q + ", Hồ Chí Minh"); if (my === seq) draw([...loc, ...g.filter(x => !loc.some(l => norm(l.n) === norm(x.n)))].slice(0, 12)); }, 450);
+  };
+  inp.addEventListener("focus", () => { inp.select(); update(); });
+  inp.addEventListener("input", update);
+  inp.addEventListener("keydown", e => { if (e.key === "Enter" && items[0]) { e.preventDefault(); choose(items[0]); } if (e.key === "Escape") box.hidden = true; });
+  inp.addEventListener("blur", () => setTimeout(() => box.hidden = true, 200));
+  box.addEventListener("mousedown", e => e.preventDefault());
+  box.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.i === "map") { box.hidden = true; inp.blur();
+      state.pickMode = kind; $("#rtOut").innerHTML = `<div class="empty">Bấm một điểm trên bản đồ làm ${kind === "from" ? "điểm xuất phát" : "nơi đến"}.</div>`; return; }
+    choose(items[+b.dataset.i]); });
+  function choose(x) {
+    box.hidden = true; inp.value = x.n; inp.blur();
+    if (kind === "from") { if (x.pid) setOrigin(x.pid); else setOriginPt([x.lon, x.lat], x.n); }
+    else runRoute([x.lon, x.lat], x.n);
+  }
+}
+function setOriginPt(pt, name) {
+  state.rtFrom = pt; state.rtFromName = name; $("#mvFrom").value = name;
+  map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: pt}}); rerun(true);
 }
 function setOrigin(pid) {
   const p = D.prj.projects.find(x => x.id === pid); if (!p) return;
-  state.rtFrom = [p.ll[1], p.ll[0]]; state.rtFromName = p.n; $("#mvFrom").value = pid;
-  map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: state.rtFrom}});
-  rerun(true);
+  setOriginPt([p.ll[1], p.ll[0]], p.n);
 }
 function rerun(fly) {
   if (!state.rtFrom) { $("#rtOut").innerHTML = `<div class="empty">Chọn điểm xuất phát.</div>`; return; }
@@ -212,8 +259,6 @@ async function runIso() {
       ${I.ga_metro_toi_duoc.length ? `<div class="rng">Ga Metro trong tầm: ${I.ga_metro_toi_duoc.map(esc).join(", ")}</div>` : ""}</div>`;
   } catch (e) { $("#rtOut").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
-$("#mvFrom").onchange = e => { const v = e.target.value; if (v === "map") { state.pickMode = "from"; $("#rtOut").innerHTML = `<div class="empty">Bấm một điểm trên bản đồ làm điểm xuất phát.</div>`; } else if (v) setOrigin(v); };
-$("#mvDest").onchange = e => { const v = e.target.value; if (v === "map") { state.pickMode = "to"; $("#rtOut").innerHTML = `<div class="empty">Bấm một điểm trên bản đồ làm nơi đến.</div>`; } else if (v !== "") { const d = DESTS[+v]; runRoute([d[2], d[1]], d[0]); } };
 $("#rtModes").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; state.rtMode = b.dataset.m; $("#rtModes").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === b)); rerun(); };
 $("#rtIso").onclick = () => runIso();
 
@@ -300,7 +345,7 @@ async function boot() {
   [D.model, D.trees, D.poi, D.metro, D.prj, D.list, D.infra, D.pp] = await Promise.all(["model.json", "trees.json", "poi.json", "metro.json", "projects.json", "listings.json", "infra.json", "project_prices.json"].map(j));
   F = D.model.features;
   $("#mode").innerHTML = MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
-  $("#disc").innerHTML = `Mô hình học từ <b>${D.model.n.toLocaleString("vi-VN")}</b> tin rao bán căn hộ (${esc(D.model.collected)}), sai số trung bình ${fmt(D.model.err_pct)}% với căn thuộc dự án đã có giá, ${fmt(D.model.results[3]["MAPE_%"])}% khi chỉ biết vị trí. Giá tin rao là giá chào bán, không phải giá giao dịch. Kết quả chỉ để tham khảo.`;
+  $("#disc").innerHTML = `Giá tin rao là giá chào bán, không phải giá giao dịch, sai số trung bình ${fmt(D.model.results[3]["MAPE_%"])}% so với thực tế. Kết quả chỉ để tham khảo. Nguồn Internet.`;
   renderProjects(); renderMetro(); renderMove();
   map = new maplibregl.Map({container: "map", style: "https://tiles.openfreemap.org/styles/positron", center: [106.715, 10.785], zoom: 12.2, pitch: 55, bearing: -20, maxPitch: 75, attributionControl: false});
   map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: "Tin rao: Chợ Tốt Nhà"}));
@@ -353,9 +398,8 @@ async function boot() {
       const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0];
       if (state.tab === "projects") { if (f) showProject(f.properties.id); return; }
       if (state.tab === "move") {
-        if (state.pickMode === "to") { state.pickMode = null; runRoute([e.lngLat.lng, e.lngLat.lat], "điểm đã chọn"); return; }
-        if (state.pickMode === "from") { state.pickMode = null; state.rtFrom = [e.lngLat.lng, e.lngLat.lat]; state.rtFromName = "điểm đã chọn";
-          map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: state.rtFrom}}); rerun(); return; }
+        if (state.pickMode === "to") { state.pickMode = null; $("#mvDest").value = "Điểm đã chọn trên bản đồ"; runRoute([e.lngLat.lng, e.lngLat.lat], "điểm đã chọn"); return; }
+        if (state.pickMode === "from") { state.pickMode = null; setOriginPt([e.lngLat.lng, e.lngLat.lat], "Điểm đã chọn trên bản đồ"); return; }
         if (f) setOrigin(f.properties.id); return; }
       if (state.tab === "price") { if (f) { const [lon, lat] = f.geometry.coordinates; setPick(lat, lon, f.properties.n, "Chủ đầu tư: " + esc(f.properties.d), f.properties.id); } else setPick(e.lngLat.lat, e.lngLat.lng); }
       if (state.tab === "metro" && f) { setTab("projects"); showProject(f.properties.id); }

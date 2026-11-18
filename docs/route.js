@@ -55,12 +55,13 @@
   const VERSION = "202611171900"; // đổi khi dựng lại graph.bin.gz
 
   const km = (a, b, c, d) => Math.hypot((a - c) * KM_LON, (b - d) * KM_LAT); // (lon,lat,lon,lat)
-  function nearest(lon, lat, maxKm = 1.5) {
-    let best = -1, bd = 1e9; const cx = Math.floor(lon / G.cell), cy = Math.floor(lat / G.cell);
-    for (let r = 0; r <= 3 && best < 0; r++)
+  // nút gần nhất thuộc mạng đường chính của phương tiện (bỏ nút trên cao tốc cấm xe máy, nhánh một chiều cụt…)
+  function nearest(lon, lat, mode, maxKm = 2) {
+    const ok = build(mode).ok; let best = -1, bd = 1e9; const cx = Math.floor(lon / G.cell), cy = Math.floor(lat / G.cell);
+    for (let r = 0; r <= 4 && best < 0; r++)
       for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
         if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-        for (const i of G.grid.get((cx + dx) + "," + (cy + dy)) || []) { const d = km(lon, lat, G.lon[i], G.lat[i]); if (d < bd) { bd = d; best = i; } }
+        for (const i of G.grid.get((cx + dx) + "," + (cy + dy)) || []) { if (!ok[i]) continue; const d = km(lon, lat, G.lon[i], G.lat[i]); if (d < bd) { bd = d; best = i; } }
       }
     return bd <= maxKm ? {i: best, km: bd} : null;
   }
@@ -94,7 +95,14 @@
     const to = new Uint32Array(out.length), w = new Float32Array(out.length), eid = new Int32Array(out.length), kind = new Uint8Array(out.length), pos = off.slice(0, N);
     for (const [f, t, ww, id, k] of out) { const p = pos[f]++; to[p] = t; w[p] = ww; eid[p] = id; kind[p] = k; }
     const vmax = mode === "metro" ? METRO_V : Math.max(...P.v);
-    return G.adj[mode] = {N, off, to, w, eid, kind, vmax};
+    // nút "hợp lệ": vừa tới được vừa quay về được từ một nút trung tâm (thành phần liên thông mạnh chính)
+    const roff = new Uint32Array(N + 1); for (let i = 0; i < to.length; i++) roff[to[i] + 1]++; for (let i = 0; i < N; i++) roff[i + 1] += roff[i];
+    const rto = new Uint32Array(to.length), rp = roff.slice(0, N);
+    for (let u = 0; u < N; u++) for (let p = off[u]; p < off[u + 1]; p++) rto[rp[to[p]]++] = u;
+    const bfs = (o, t, s0) => { const seen = new Uint8Array(N), q = [s0]; seen[s0] = 1; while (q.length) { const u = q.pop(); for (let p = o[u]; p < o[u + 1]; p++) { const v = t[p]; if (!seen[v]) { seen[v] = 1; q.push(v); } } } return seen; };
+    let c = 0, cd = 1e9; for (let i = 0; i < G.N; i++) { if (off[i + 1] === off[i]) continue; const d = km(G.lon[i], G.lat[i], 106.70, 10.776); if (d < cd) { cd = d; c = i; } }
+    const f = bfs(off, to, c), r = bfs(roff, rto, c), ok = new Uint8Array(N); for (let i = 0; i < N; i++) ok[i] = f[i] & r[i];
+    return G.adj[mode] = {N, off, to, w, eid, kind, vmax, ok};
   }
   const nodeLL = i => i < G.N ? [G.lon[i], G.lat[i]] : [G.st[i - G.N][2], G.st[i - G.N][1]];
 
@@ -154,10 +162,11 @@
   /* ---------- API ---------- */
   async function route(from, to, mode = "moto") {
     await load();
-    const a = nearest(from[0], from[1]), b = nearest(to[0], to[1]);
+    let a = nearest(from[0], from[1], mode), b = nearest(to[0], to[1], mode);
     if (!a || !b) throw new Error("Điểm nằm ngoài vùng dữ liệu đường (TP.HCM nội thành)");
-    const astar = search(mode, a.i, b.i, true), dijk = search(mode, a.i, b.i, false);
-    if (!isFinite(astar.g[b.i])) throw new Error("Không tìm thấy đường đi");
+    const astar = search(mode, a.i, b.i, true);
+    if (!isFinite(astar.g[b.i])) throw new Error("Không tìm thấy đường đi tới điểm này");
+    const dijk = search(mode, a.i, b.i, false);
     const p = path(astar, a.i, b.i);
     // thời gian đi bộ từ điểm chọn tới đường gần nhất
     const access = (a.km + b.km) * 1.3 / (mode === "metro" ? 4.5 : 15) * 60;
@@ -174,7 +183,7 @@
   }
   async function isochrone(origin, mode = "moto", maxMin = 30) {
     await load();
-    const a = nearest(origin[0], origin[1]); if (!a) throw new Error("Điểm nằm ngoài vùng dữ liệu đường");
+    const a = nearest(origin[0], origin[1], mode); if (!a) throw new Error("Điểm nằm ngoài vùng dữ liệu đường");
     const r = search(mode, a.i, -1, false, maxMin), t = r.g, feats = [];
     for (let i = 0; i < G.M; i++) {
       const tu = t[G.eu[i]], tv = t[G.ev[i]], tt = Math.max(tu, tv);
