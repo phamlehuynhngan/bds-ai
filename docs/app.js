@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611181500";
+const V = "?v=202611181545";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -145,16 +145,36 @@ function showProject(id) {
   const p = D.prj.projects.find(x => x.id === id); if (!p) return;
   const d = devOf(p), st = nearestStation(p.ll[0], p.ll[1]), pp = D.pp?.[p.id] || {}, low = pp.kind === "thap_tang", r = low ? null : valuate(p.ll[0], p.ll[1], {}, p.id);
   $("#pjList").hidden = true; $("#pjDetail").hidden = false;
+  const mk = market(p.id), dc = d.c || "#3b2a14";
+  const stat = (lbl, val, sub) => `<div class="stat"><span>${lbl}</span><b>${val}</b><small>${sub}</small></div>`;
   $("#pjDetail").innerHTML = `<button class="back" id="pjBack"><i>‹</i> Danh sách dự án</button>
-    <h2>${esc(p.n)}</h2><div class="sub">Chủ đầu tư: <b>${esc(d.n)}</b>${p.g ? " · " + esc(p.g) : ""}</div>
-    ${p.tag ? `<div class="tagline">${esc(p.tag)}</div>` : ""}
-    <dl class="kv">${p.addr ? `<dt>Địa chỉ</dt><dd>${esc(p.addr)}${p.a ? " (vị trí tham khảo)" : ""}</dd>` : ""}
-      <dt>Ga Metro số 1</dt><dd>${esc(st.n)} · ${fmt(st.d)} km</dd>
-      ${low ? `<dt>Giá</dt><dd>${esc(pp.note)}</dd>` : `<dt>Ước tính AI</dt><dd>≈ <b>${fmt(r.gia_trieu_m2)} triệu/m²</b> · căn 70 m², 2 PN ≈ ${fmt(r.tong_ty, 1)} tỷ${market(p.id) ? "" : " (chỉ theo vị trí, chưa có giá dự án)"}</dd>`}
-      ${(p.info || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
-    ${mkHTML(market(p.id))}
-    ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : `<p class="desc">Thông tin dự án đang cập nhật.</p>`}
-    ${low ? "" : `<button class="btn" id="pjValue">Định giá chi tiết</button>`} <button class="btn alt" id="pjMove">Di chuyển</button> ${p.web ? `<a class="btn alt" href="${esc(p.web)}" target="_blank" rel="noopener">Web chủ đầu tư ↗</a>` : ""}`;
+    <header class="pj-hero" style="--dc:${dc}">
+      <div class="pj-dev"><span class="dot" style="background:${dc}">${esc(d.s)}</span><span>${esc(d.n)}</span>${p.g ? `<em>${esc(p.g)}</em>` : ""}</div>
+      <h2>${esc(p.n)}</h2>
+      ${p.tag ? `<p class="tagline">${esc(p.tag)}</p>` : ""}
+      ${p.addr ? `<div class="pj-loc"><svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>${esc(p.addr)}${p.a ? " · vị trí tham khảo" : ""}</div>` : ""}
+    </header>
+    <div class="pj-stats">
+      ${low ? stat("Giá bán", "Theo căn", "Nhà phố – biệt thự") : stat("Giá thị trường", mk ? `${fmt(mk.lo, 0)}–${fmt(mk.hi, 0)}` : "—", mk ? "triệu/m²" : "chưa có dữ liệu")}
+      ${low ? "" : stat("Ước tính AI", fmt(r.gia_trieu_m2, 0), `triệu/m² · 70 m² ≈ ${fmt(r.tong_ty, 1)} tỷ`)}
+      ${stat("Metro số 1", fmt(st.d) + " km", "Ga " + esc(st.n))}
+    </div>
+    <section class="pj-card"><h3>Tổng quan</h3>
+      <p class="pj-desc" id="pjDesc">${esc(p.desc || "Thông tin dự án đang được cập nhật.")}</p>
+      ${p.desc && p.desc.length > 220 ? `<button class="more" id="pjMore">Xem thêm</button>` : ""}
+    </section>
+    ${(p.info || []).length || (p.am || []).length ? `<section class="pj-card"><h3>Thông tin dự án</h3>
+      ${(p.info || []).length ? `<div class="facts">${p.info.map(([k, v]) => `<div class="fact"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>` : ""}
+      ${(p.am || []).length ? `<div class="ams">${p.am.map(a => `<span>${esc(a)}</span>`).join("")}</div>` : ""}</section>` : ""}
+    ${mk ? `<section class="pj-card"><h3>Nguồn giá thị trường</h3>
+      <p class="pj-note">${mk.kind === "chotot" ? esc(mk.note) : `${esc(KIND[mk.kind] || "")}. ${esc(mk.note)}`}${mk.src ? ` <a href="${esc(mk.src)}" target="_blank" rel="noopener">Xem nguồn ↗</a>` : ""}</p></section>`
+      : low ? `<section class="pj-card"><h3>Giá bán</h3><p class="pj-note">${esc(pp.note)}</p></section>` : ""}
+    <div class="pj-actions">
+      ${low ? "" : `<button class="btn" id="pjValue">Định giá chi tiết</button>`}
+      <button class="btn alt" id="pjMove">Kết nối</button>
+      ${p.web ? `<a class="btn alt ic" href="${esc(p.web)}" target="_blank" rel="noopener" title="Web chủ đầu tư">Web CĐT ↗</a>` : ""}
+    </div>`;
+  if ($("#pjMore")) $("#pjMore").onclick = () => { const o = $("#pjDesc").classList.toggle("open"); $("#pjMore").textContent = o ? "Thu gọn" : "Xem thêm"; };
   $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); stopOrbit(); };
   $("#pjMove").onclick = () => { setTab("move"); setOrigin(p.id); };
   if ($("#pjValue")) $("#pjValue").onclick = () => { setTab("price"); setPick(p.ll[0], p.ll[1], p.n, "Chủ đầu tư: " + esc(d.n), p.id); };
