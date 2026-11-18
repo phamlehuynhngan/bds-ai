@@ -1,5 +1,5 @@
 /* Bản đồ dự án BĐS TP.HCM – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611191200";
+const V = "?v=202611191300";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -202,6 +202,65 @@ async function geocode(q) {
   const out = r.map(x => { const parts = x.display_name.split(", "); return {n: x.name || parts[0], sub: parts.slice(1, 4).join(", "), lat: +x.lat, lon: +x.lon, k: "geo"}; });
   GEO_CACHE.set(q, out); return out;
 }
+/* ================= biểu tượng địa điểm nổi bật (chuyển từ web map Masterise / mapduanmh) ================= */
+const AG={icon:["#b9853f","Biểu tượng"],public:["#c0703a","Không gian công cộng"],transport:["#3d6a96","Giao thông"],
+  shop:["#8e5fa8","Mua sắm"],health:["#cf4b56","Y tế"],park:["#4c8f5a","Công viên, giải trí"],edu:["#2f8a86","Giáo dục"],expo:["#7a6650","Triển lãm, hội nghị"]};
+const GL={
+  benthanh:`<path d="M3 20h18v1.2H3z"/><path d="M4 19.5v-6h4.6v6zM15.4 19.5v-6H20v6z"/><path d="M3.4 13.6 6.3 11l2.9 2.6zM14.8 13.6l2.9-2.6 2.9 2.6z"/><path d="M9.2 19.5V9h5.6v10.5z"/><path d="M10 9V6.2L12 4l2 2.2V9z"/><circle cx="12" cy="11.6" r="1.7" fill="C"/><path d="M11 19.5v-3.2h2v3.2z" fill="C"/>`,
+  ducba:`<path d="M4.8 20.5V9.3L6.9 3.5l2.1 5.8v11.2zM15 20.5V9.3l2.1-5.8 2.1 5.8v11.2z"/><path d="M8.6 20.5v-8.6L12 9.4l3.4 2.5v8.6z"/><circle cx="12" cy="13.6" r="1.5" fill="C"/><path d="M11 20.5v-3a1 1 0 0 1 2 0v3z" fill="C"/>`,
+  walk:`<circle cx="13.4" cy="4.4" r="2"/><path d="M10.6 8.2 7.5 11v3.8h1.9v-2.9l1.3-1.1.9 3.8-3 6.4h2.1l2.4-4.8 2 4.8h2.1L14.6 14l-.8-3.3 1.8 1.7h3v-1.8h-2.2l-2.6-2.9a1.8 1.8 0 0 0-1.4-.6z"/>`,
+  plane:`<path d="M21.5 16v-2l-8-5V3.5C13.5 2.7 12.8 2 12 2s-1.5.7-1.5 1.5V9l-8 5v2l8-2.5V19l-2 1.5V22L12 21l3.5 1v-1.5l-2-1.5v-5.5z"/>`,
+  tree:`<circle cx="12" cy="9" r="6"/><path d="M11 13h2v8h-2z"/><path d="M7 21h10v1H7z"/>`,
+  lm81:`<path d="M9 21.5V10h1.4V7h1V3.2h1.2V7h1v3H15v11.5z"/><path d="M5.5 21h13v1.2h-13z"/><path d="M11.4 11h1.2v9h-1.2z" fill="C"/>`,
+  suoitien:`<path d="M3.5 21V10.5h2.2v2h2v-2h2.2v2h4.2v-2h2.2v2h2v-2h2.2V21h-6.5v-4.2a2 2 0 0 0-4 0V21z"/><path d="M11 10.5V6.8l1-1.3 1 1.3v3.7z"/>`,
+  bus:`<path d="M4 16c0 .9.4 1.7 1 2.2V20a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h8v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3.5-3.6-4-8-4S4 2.5 4 6zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM18 11H6V6h12z"/>`,
+  bag:`<path d="M5 8h14l-1.2 13H6.2z"/><path d="M9 9V6.5a3 3 0 0 1 6 0V9" fill="none" stroke="#fff" stroke-width="1.9"/>`,
+  expo:`<path d="M2.5 20.5v-6.8C2.5 9 7 5.5 12 5.5s9.5 3.5 9.5 8.2v6.8z"/><path d="M7.5 20.5v-5h9v5z" fill="C"/><path d="M11.4 15.5h1.2v5h-1.2z"/>`,
+  cross:`<path d="M9.8 3h4.4v6.8H21v4.4h-6.8V21H9.8v-6.8H3V9.8h6.8z"/>`,
+  palace:`<path d="M2 20.3h20v1.4H2z"/><path d="M3 20.3V12h18v8.3z"/><path d="M6.5 12V9.5h11V12z"/><path d="M11.5 9.5V3h1v1.2h3l-.9 1 .9 1h-3v3.3z"/><path d="M5 14h2v4H5zM8.5 14h2v4h-2zM13.5 14h2v4h-2zM17 14h2v4h-2z" fill="C"/>`,
+  boat:`<path d="M3 15h18l-3 5.5H6z"/><path d="M11 2.8V14H4.5z"/><path d="M12.5 5.5V14h5.8z"/>`,
+  bitexco:`<path d="M10 21.5 10.6 6.5h2.8l.6 15z"/><ellipse cx="14.4" cy="10.3" rx="3.6" ry="1.1"/><path d="M11.4 6.5 12 2.5l.6 4z"/><path d="M7 21.5h10v1H7z"/>`,
+  opera:`<path d="M2.5 21V11l9.5-6.5L21.5 11v10z"/><path d="M9.6 21v-4.8a2.4 2.4 0 0 1 4.8 0V21z" fill="C"/><path d="M5 13h2.2v4H5zM16.8 13H19v4h-2.2z" fill="C"/>`,
+  train:`<path d="M12 2C8 2 4 2.5 4 6v9.5C4 17.4 5.6 19 7.5 19L6 20.5v.5h2.2l2-2H14l2 2h2v-.5L16.5 19c1.9 0 3.5-1.6 3.5-3.5V6c0-3.5-3.6-4-8-4zM7.5 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.5-7H6V6h5zm2 0V6h5v4zm3.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>`,
+  zoo:`<circle cx="6.5" cy="10" r="2.1"/><circle cx="17.5" cy="10" r="2.1"/><circle cx="9.6" cy="5.8" r="2.1"/><circle cx="14.4" cy="5.8" r="2.1"/><path d="M12 11.5c-2.8 0-6 4-6 6.5 0 2.4 2.6 2.6 6 1.4 3.4 1.2 6 1 6-1.4 0-2.5-3.2-6.5-6-6.5z"/>`,
+  wheel:`<circle cx="12" cy="10" r="7" fill="none" stroke="#fff" stroke-width="1.9"/><path d="M12 3v14M5 10h14M7 5l10 10M17 5 7 15" stroke="#fff" stroke-width="1.2"/><path d="M12 10l-4.2 11.5h8.4z"/>`,
+  cap:`<path d="M5 13.2v4L12 21l7-3.8v-4L12 17zM12 3 1 9l11 6 9-4.9V17h2V9z"/>`,
+  market:`<path d="M2.5 4h19l1 5.2h-21z"/><path d="M4 10.2h16v10.3H4z"/><path d="M9 20.5v-6h6v6z" fill="C"/>`,
+  lake:`<path d="M2 8.5c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0V11c-1.5-2-3.5-2-6 0s-4.5 2-7 0-4.5-2-7 0z"/><path d="M2 14.5c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0V17c-1.5-2-3.5-2-6 0s-4.5 2-7 0-4.5-2-7 0z"/>`,
+  bridge:`<path d="M1.5 15h21v2.2h-21z"/><path d="M3.5 15C3.5 10.3 7.3 7 12 7s8.5 3.3 8.5 8h-2.3c0-3.4-2.8-5.8-6.2-5.8S5.8 11.6 5.8 15z"/><path d="M8.2 10.5h1.2V15H8.2zM14.6 10.5h1.2V15h-1.2zM11.4 9.2h1.2V15h-1.2z"/>`,
+  chip:`<rect x="7" y="7" width="10" height="10" rx="1.2"/><path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3" stroke="#fff" stroke-width="1.7"/>`
+};
+function badgeSVG(icon,color,px=48){
+  const g=(GL[icon]||GL.tree).replace(/"C"/g,`"${color}"`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#fff"/><circle cx="24" cy="24" r="19" fill="${color}"/><g fill="#fff" transform="translate(12.6 12.2) scale(.95)">${g}</g></svg>`;
+}
+const svgURL=s=>"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s);
+const anchorImg = a => `a-${a[5]}-${a[1]}`;  // a = [tên, nhóm, tầng, lat, lon, biểu tượng]
+function loadAnchorImages() {
+  const need = {}; (D.anchors || []).forEach(a => need[anchorImg(a)] = [a[5], AG[a[1]][0]]);
+  return Promise.all(Object.entries(need).map(([id, [ic, col]]) => new Promise(res => { const im = new Image(96, 96);
+    im.onload = () => { if (!map.hasImage(id)) map.addImage(id, im, {pixelRatio: 2}); res(); }; im.onerror = res; im.src = svgURL(badgeSVG(ic, col, 96)); })));
+}
+async function addAnchors() {
+  await loadAnchorImages();
+  map.addSource("anchors", {type: "geojson", data: FC((D.anchors || []).map((a, i) => ({type: "Feature", properties: {n: a[0], img: anchorImg(a), tier: a[2], g: a[1], rank: a[2] * 100 + i}, geometry: {type: "Point", coordinates: [a[4], a[3]]}})))});
+  const before = map.getLayer("pj") ? "pj" : undefined;
+  const mk = (id, tier, minz, size, ts) => map.addLayer({id, type: "symbol", source: "anchors", minzoom: minz, filter: ["==", ["get", "tier"], tier],
+    layout: {"icon-image": ["get", "img"], "icon-size": size, "icon-allow-overlap": false, "text-field": ["get", "n"], "text-font": ["Noto Sans Bold"], "text-size": ts,
+      "text-variable-anchor": ["top", "bottom", "right", "left"], "text-radial-offset": 1.05, "text-justify": "auto", "text-optional": true, "text-max-width": 9, "symbol-sort-key": ["get", "rank"]},
+    paint: {"text-color": "#3b2a14", "text-halo-color": "#fffdf8", "text-halo-width": 1.8}}, before);
+  mk("anchors-1", 1, 9, .78, 11.5); mk("anchors-2", 2, 12.4, .68, 11); mk("anchors-3", 3, 13.4, .62, 10.5);
+  const sp = new maplibregl.Popup({closeButton: false, className: "sp", offset: 16});
+  ANCHOR_LAYERS.forEach(l => {
+    map.on("mouseenter", l, e => { map.getCanvas().style.cursor = "pointer"; const f = e.features[0];
+      sp.setLngLat(f.geometry.coordinates).setHTML(`<b>${esc(f.properties.n)}</b><small>${AG[f.properties.g][1]}</small>`).addTo(map); });
+    map.on("mouseleave", l, () => { map.getCanvas().style.cursor = ""; sp.remove(); });
+    map.on("click", l, e => { if (state.tab !== "move") return; const f = e.features[0], c = f.geometry.coordinates;
+      if (state.rtFrom) { $("#mvDest").value = f.properties.n; runRoute(c, f.properties.n); } else { $("#mvFrom").value = f.properties.n; setOriginPt(c, f.properties.n); } });
+  });
+  setTab(state.tab);
+}
+const ANCHOR_LAYERS = ["anchors-1", "anchors-2", "anchors-3"];
 const AGRP = {icon: "Điểm nổi bật", public: "Không gian công cộng", transport: "Giao thông", park: "Công viên", shop: "Mua sắm", expo: "Triển lãm – hội nghị", health: "Y tế", edu: "Giáo dục"};
 let PLACES = null;
 async function loadPlaces() { if (!PLACES) PLACES = fetch("data/places.json" + V).then(r => r.json()).catch(() => []); return PLACES; }
@@ -358,11 +417,11 @@ function showHits(points, fit = true) { // points: [{lat, lon, label}]
 
 /* ================= điều hướng tab ================= */
 const LAYERS = {
-  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "towers"],
-  move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
-  metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d", "towers"],
+  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "towers", ...ANCHOR_LAYERS],
+  move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "towers", ...ANCHOR_LAYERS, "iso", "route-case", "route", "route-walk", "route-ends"],
+  metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d", "towers", ...ANCHOR_LAYERS],
   price: ["grid", "ls", "pj", "metro-l", "metro-s"],
-  about: ["pj", "metro-l", "metro-s", "b3d", "towers"],
+  about: ["pj", "metro-l", "metro-s", "b3d", "towers", ...ANCHOR_LAYERS],
   chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
 };
 const ALL = [...new Set(Object.values(LAYERS).flat())];
@@ -439,6 +498,7 @@ async function boot() {
     map.addSource("pick", {type: "geojson", data: FC([])});
     map.addLayer({id: "pick", type: "circle", source: "pick", paint: {"circle-radius": 10, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#3b2a14", "circle-stroke-width": 3}});
     setMode("p"); renderProjects(); setTab(state.tab); startOrbit(2.5);
+    addAnchors();
     map.on("click", e => {
       const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0];
       if (state.tab === "projects") { if (f) showProject(f.properties.id); return; }
