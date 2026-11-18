@@ -1,5 +1,5 @@
 /* Bản đồ dự án BĐS TP.HCM – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611191300";
+const V = "?v=202611191400";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -180,8 +180,7 @@ function showProject(id) {
   if ($("#pjValue")) $("#pjValue").onclick = () => { setTab("price"); setPick(p.ll[0], p.ll[1], p.n, "Chủ đầu tư: " + esc(d.n), p.id); };
   map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}});
   stopOrbit(); window.metroStop?.();
-  map.flyTo({center: [p.ll[1], p.ll[0]], zoom: p.poly ? 15.4 : 16.2, pitch: 60, bearing: map.getBearing() - 30, duration: 1800, essential: true});
-  map.once("moveend", () => startOrbit());
+  flyOrbit({center: [p.ll[1], p.ll[0]], zoom: p.poly ? 15.4 : 16.2, pitch: 60, bearing: map.getBearing() - 30, duration: 1800});
 }
 /* ================= tab Di chuyển (A* / Dijkstra trong route.js) ================= */
 const DESTS = [["Chợ Bến Thành", 10.77253, 106.69804], ["Phố đi bộ Nguyễn Huệ", 10.77541, 106.70014], ["Sân bay Tân Sơn Nhất", 10.81798, 106.65626],
@@ -334,7 +333,7 @@ function rerun(fly) {
   if (state.rtLast) runRoute(state.rtLast.to, state.rtLast.name);
   else if (state.isoOn) runIso();
   else { window.ROUTER?.clear(); $("#rtOut").innerHTML = `<div class="empty">Chọn nơi đến hoặc bấm “Vùng 30 phút”.</div>`;
-    if (fly) { stopOrbit(); map.flyTo({center: state.rtFrom, zoom: 14, pitch: 50, duration: 1200}); } }
+    if (fly) flyOrbit({center: state.rtFrom, zoom: 14, pitch: 50, duration: 1200}); }
 }
 async function runRoute(to, name) {
   if (!state.rtFrom) return rerun();
@@ -374,13 +373,20 @@ $("#devAcc").addEventListener("click", e => {
 $("#pjSearch").addEventListener("input", e => { state.q = e.target.value.trim(); renderProjects(); });
 
 /* ================= xoay bản đồ 3D ================= */
-let orbitRAF = null, orbitLast = 0;
+let orbitRAF = null, orbitLast = 0, flyTok = 0, touched = false;
 function startOrbit(speed = 4) { // độ/giây
-  stopOrbit(); orbitLast = performance.now();
+  cancelAnimationFrame(orbitRAF); orbitLast = performance.now();
   const step = now => { const dt = (now - orbitLast) / 1000; orbitLast = now; map.setBearing((map.getBearing() + speed * dt) % 360); orbitRAF = requestAnimationFrame(step); };
   orbitRAF = requestAnimationFrame(step);
 }
-function stopOrbit() { cancelAnimationFrame(orbitRAF); orbitRAF = null; }
+function stopOrbit() { cancelAnimationFrame(orbitRAF); orbitRAF = null; flyTok++; }  // huỷ cả lệnh xoay đang chờ sau khi bay
+// bay tới một điểm rồi xoay liên tục; chỉ dừng khi người dùng chạm/kéo/cuộn bản đồ (kể cả lúc đang bay)
+function flyOrbit(opts) {
+  stopOrbit(); const tok = ++flyTok; touched = false;
+  map.flyTo({duration: 1800, ...opts, essential: true});
+  const go = () => { if (tok === flyTok && !touched) startOrbit(); };
+  map.once("moveend", go); setTimeout(go, (opts.duration || 1800) + 400);  // dự phòng khi moveend bị sự kiện khác chiếm
+}
 window.stopOrbit = stopOrbit;
 
 /* ================= tab Metro ================= */
@@ -454,7 +460,7 @@ async function boot() {
   map = new maplibregl.Map({container: "map", style: "https://tiles.openfreemap.org/styles/positron", center: [106.715, 10.785], zoom: 12.2, pitch: 55, bearing: -20, maxPitch: 75, attributionControl: false});
   map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: "Tin rao: Chợ Tốt Nhà"}));
   map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), "bottom-right");
-  ["mousedown", "touchstart", "wheel"].forEach(ev => map.on(ev, stopOrbit));
+  ["mousedown", "touchstart", "wheel"].forEach(ev => map.on(ev, () => { touched = true; stopOrbit(); }));
   map.on("load", () => {
     const first = map.getStyle().layers.find(l => l.type === "symbol")?.id;
     // lưới giá
