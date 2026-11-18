@@ -34,7 +34,7 @@ body:not([data-tab=price]) .layers,body:not([data-tab=price]) .hint{display:none
 /* bảng bên phải */
 .panel{position:fixed;top:var(--top);right:0;bottom:0;width:var(--pw);z-index:30;background:var(--paper);border-left:1px solid var(--line);overflow:auto}
 .tab{display:none;padding:20px 20px 28px}
-body[data-tab=projects] #tab-projects,body[data-tab=move] #tab-move,body[data-tab=metro] #tab-metro,body[data-tab=price] #tab-price{display:block}
+body[data-tab=projects] #tab-projects,body[data-tab=move] #tab-move,body[data-tab=metro] #tab-metro,body[data-tab=price] #tab-price,body[data-tab=about] #tab-about{display:block}
 body[data-tab=chat] #tab-chat{display:flex}
 .panel h2{font-size:17px;font-weight:600;line-height:1.35}
 .panel .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
@@ -206,3 +206,12 @@ dialog .row button:last-child{padding:8px 16px;border-radius:999px;background:va
 .pj-actions .btn{margin-top:0;flex:1;justify-content:center;white-space:nowrap}
 .pj-actions .btn.ic{flex:0 0 auto}
 @media (max-width:820px){.pj-hero h2{font-size:19px}.pj-actions{bottom:-20px}}
+.tabs .t-short{display:none}
+.au-card{margin-top:16px;padding:18px;border-radius:14px;background:var(--beige);border:1px solid var(--line-2)}
+.au-name{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.au-role{margin-top:4px;font-weight:600;color:var(--ink-2)}
+.au-school{margin-top:2px;font-size:13px;color:var(--muted)}
+.au-sec{margin-top:12px}.au-sec h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px}
+.au-sec p{font-size:13.5px;line-height:1.6}.au-sec p+p{margin-top:8px}
+.au-list{margin:0;padding-left:18px;font-size:13.5px;line-height:1.6}.au-list li+li{margin-top:6px}
+@media (max-width:820px){.tabs .t-full{display:none}.tabs .t-short{display:inline}.tabs button{padding:6px 6px}}

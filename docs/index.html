@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
-<link rel="stylesheet" href="app.css?v=202611182200">
+<link rel="stylesheet" href="app.css?v=202611182300">
 </head>
 <body data-tab="projects">
 <header class="top">
@@ -20,6 +20,7 @@
     <button data-t="metro">Metro</button>
     <button data-t="price">Bản đồ giá</button>
     <button data-t="move">Kết nối</button>
+    <button data-t="about"><span class="t-full">Thông tin tác giả</span><span class="t-short">Tác giả</span></button>
     <button data-t="chat" hidden>Hỏi đáp</button>
   </nav>
 </header>
@@ -95,6 +96,34 @@
     <div id="rtOut"><div class="empty">Chọn điểm xuất phát và nơi đến (hoặc bấm ghim dự án trên bản đồ).</div></div>
   </section>
 
+  <!-- THÔNG TIN TÁC GIẢ -->
+  <section class="tab" id="tab-about">
+    <h2>Thông tin tác giả</h2>
+    <div class="sub">Giới thiệu và tuyên bố miễn trừ trách nhiệm</div>
+    <div class="au-card">
+      <div class="au-name">Phạm Lê Huỳnh Ngân</div>
+      <div class="au-role">Sinh viên ngành Trí tuệ nhân tạo</div>
+      <div class="au-school">Trường Đại học Công nghệ Thông tin – Đại học Quốc gia TP.HCM · 2026</div>
+    </div>
+    <section class="pj-card au-sec"><h3>Mục đích</h3>
+      <p>Website được xây dựng nhằm phục vụ <b>đồ án học tập</b> của Phạm Lê Huỳnh Ngân. Dự án nghiên cứu cách ứng dụng trí tuệ nhân tạo vào bản đồ dự án, Metro, định giá căn hộ và tính thời gian di chuyển tại TP.HCM.</p>
+      <p>Đây không phải sản phẩm thương mại. Website không mua bán, không môi giới, không quảng cáo và không thu thập thông tin cá nhân của người xem.</p>
+    </section>
+    <section class="pj-card au-sec"><h3>Tuyên bố miễn trừ trách nhiệm</h3>
+      <ul class="au-list">
+        <li>Mọi thông tin trên website chỉ để <b>tham khảo</b>, không phải lời khuyên đầu tư, tài chính hay pháp lý.</li>
+        <li>Giá tin rao là giá chào bán, không phải giá giao dịch. Giá ước tính của mô hình có sai số trung bình 23,6% so với thực tế.</li>
+        <li>Thông tin dự án, chủ đầu tư, vị trí, quy mô và tiến độ được tổng hợp từ nguồn công khai, có thể chưa đầy đủ hoặc chưa cập nhật. Vui lòng kiểm tra với chủ đầu tư hoặc cơ quan có thẩm quyền trước khi ra quyết định.</li>
+        <li>Tiến độ và hướng tuyến Metro tổng hợp từ báo chí; một số tuyến quy hoạch là ước tính.</li>
+        <li>Thời gian di chuyển được tính trên mạng đường OpenStreetMap, chưa tính ùn tắc giao thông.</li>
+        <li>Tên và thương hiệu dự án, chủ đầu tư thuộc về chủ sở hữu. Website không liên kết với, và không được tài trợ bởi, bất kỳ chủ đầu tư nào.</li>
+      </ul>
+    </section>
+    <section class="pj-card au-sec"><h3>Nguồn dữ liệu</h3>
+      <p>Chợ Tốt Nhà (dữ liệu tin rao công khai, 11/2026) · OpenStreetMap · OpenFreeMap · website chủ đầu tư và báo chí.</p>
+    </section>
+  </section>
+
   <!-- HỎI ĐÁP -->
   <section class="tab chat" id="tab-chat">
     <div class="msgs" id="msgs"></div>
@@ -121,10 +150,10 @@
 </dialog>
 
 <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script src="app.js?v=202611182200"></script>
-<script src="route.js?v=202611182200"></script>
-<script src="towers.js?v=202611182200"></script>
-<script src="metro3d.js?v=202611182200"></script>
-<script type="module" src="chat.js?v=202611182200"></script>
+<script src="app.js?v=202611182300"></script>
+<script src="route.js?v=202611182300"></script>
+<script src="towers.js?v=202611182300"></script>
+<script src="metro3d.js?v=202611182300"></script>
+<script type="module" src="chat.js?v=202611182300"></script>
 </body>
 </html>

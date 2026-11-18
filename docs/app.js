@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611182200";
+const V = "?v=202611182300";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -362,6 +362,7 @@ const LAYERS = {
   move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
   metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d", "towers"],
   price: ["grid", "ls", "pj", "metro-l", "metro-s"],
+  about: ["pj", "metro-l", "metro-s", "b3d", "towers"],
   chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
 };
 const ALL = [...new Set(Object.values(LAYERS).flat())];
