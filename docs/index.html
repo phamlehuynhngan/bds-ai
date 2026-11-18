@@ -1,5 +1,153 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><title>Bản đồ dự án BĐS TP.HCM</title>
-<script>location.replace("../" + location.hash)</script>
-<meta http-equiv="refresh" content="0; url=../"></head>
-<body><a href="../">Mở Bản đồ dự án BĐS TP.HCM</a></body></html>
+<html lang="vi">
+<head>
+<!-- BẢN SAO của index.html gốc (bỏ dòng <base>), để link cũ /docs/ và bản lưu đệm cũ vẫn mở được. Sửa index.html gốc thì chạy: python3 pipeline/sync_docs_index.py -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản đồ dự án BĐS TP.HCM</title>
+<meta name="description" content="Bản đồ dự án, Metro, định giá căn hộ TP.HCM bằng học máy và trợ lý hỏi đáp tiếng Việt.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%233b2a14%22/%3E%3Ctext x=%2216%22 y=%2221%22 font-size=%2213%22 font-family=%22Arial%22 font-weight=%22700%22 fill=%22%23eca130%22 text-anchor=%22middle%22%3EAI%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="app.css?v=202611191500">
+</head>
+<body data-tab="projects">
+<header class="top">
+  <div class="logo"><img src="dee-logo.png" alt="DEE Media">BẢN ĐỒ DỰ ÁN BĐS TP.HCM</div>
+  <nav class="tabs" id="tabs">
+    <button data-t="projects" class="on">Dự án</button>
+    <button data-t="metro">Metro</button>
+    <button data-t="price">Bản đồ giá</button>
+    <button data-t="move">Kết nối</button>
+    <button data-t="about"><span class="t-full">Thông tin tác giả</span><span class="t-short">Tác giả</span></button>
+    <button data-t="chat" hidden>Hỏi đáp</button>
+  </nav>
+</header>
+
+<div id="map"></div>
+
+<details class="layers" id="layers" open>
+  <summary>Lớp bản đồ</summary>
+  <h4>Tô bản đồ theo</h4>
+  <select id="mode"></select>
+  <label><input type="checkbox" id="lyListings" checked> Tin rao thực tế</label>
+  <label><input type="checkbox" id="lyProjects" checked> Dự án TP.HCM</label>
+  <div class="legend"><div class="bar" id="lgBar"></div><div class="ticks" id="lgTicks"></div><div class="cap" id="lgCap"></div></div>
+</details>
+<div class="hint" id="hint">Bấm vào bất kỳ điểm nào trên bản đồ để định giá</div>
+
+<aside class="panel" id="panel">
+  <!-- DỰ ÁN -->
+  <section class="tab" id="tab-projects">
+    <div id="pjList">
+      <h2>Dự án TP.HCM</h2>
+      <div class="sub" id="pjCount"></div>
+      <input class="search" id="pjSearch" placeholder="Tìm tên dự án, địa chỉ…">
+      <div class="list" id="devAcc"></div>
+    </div>
+    <div id="pjDetail" hidden></div>
+  </section>
+
+  <!-- METRO -->
+  <section class="tab" id="tab-metro">
+    <h2>Metro TP.HCM</h2>
+    <div class="sub">Bấm một tuyến để xem tàu 3D chạy theo lộ trình (cầu cạn, đoạn ngầm, camera bám tàu). Bấm lại để dừng.</div>
+    <div class="list" id="metroLines"></div>
+    <div class="sec"><h3>Ga Metro số 1</h3><div class="list compact" id="m1Stations"></div></div>
+    <div class="disc">Tiến độ tổng hợp từ báo chí (11/2026). Một số hướng tuyến quy hoạch là ước tính.</div>
+  </section>
+
+  <!-- BẢN ĐỒ GIÁ -->
+  <section class="tab" id="tab-price">
+    <h2 id="pTitle">Định giá căn hộ</h2>
+    <div class="sub" id="pSub">Chọn một điểm trên bản đồ hoặc một dự án.</div>
+    <div class="sec">
+      <h3>Thông tin căn hộ</h3>
+      <div class="form">
+        <label>Diện tích (m²)<input id="fSize" type="number" min="20" max="300" value="70"></label>
+        <label>Phòng ngủ<select id="fRooms"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+        <label>Nhà vệ sinh<select id="fToilets"><option>1</option><option selected>2</option><option>3</option></select></label>
+        <label>Nội thất<select id="fFurn"><option value="1">Cao cấp</option><option value="2" selected>Đầy đủ</option><option value="3">Hoàn thiện cơ bản</option><option value="4">Bàn giao thô</option></select></label>
+        <label>Pháp lý<select id="fLegal"><option value="6">Sổ hồng riêng</option><option value="5">Hợp đồng mua bán</option><option value="2">Đang chờ sổ</option></select></label>
+        <label>Tình trạng<select id="fStatus"><option value="2">Đã bàn giao</option><option value="1">Chưa bàn giao</option></select></label>
+      </div>
+    </div>
+    <div id="out"><div class="empty">Chưa chọn vị trí. Bấm lên bản đồ để xem giá dự đoán và lý do.</div></div>
+    <div class="disc" id="disc"></div>
+  </section>
+
+  <!-- DI CHUYỂN -->
+  <section class="tab" id="tab-move">
+    <h2>Kết nối</h2>
+    <div class="sub">Thời gian di chuyển hai chiều giữa dự án, tiện ích và mọi địa điểm ở TP.HCM.</div>
+    <div class="sec">
+      <div class="od">
+        <div class="od-f"><h3>Điểm xuất phát</h3>
+          <div class="combo"><input id="mvFrom" placeholder="Tìm dự án, tiện ích, địa chỉ…" autocomplete="off"><div class="sug" id="mvFromSug" hidden></div></div>
+          <h3 style="margin-top:12px">Nơi đến</h3>
+          <div class="combo"><input id="mvDest" placeholder="Tìm dự án, tiện ích, địa chỉ…" autocomplete="off"><div class="sug" id="mvDestSug" hidden></div></div></div>
+        <button class="swap" id="mvSwap" title="Đổi chiều">⇅</button>
+      </div>
+      <h3 style="margin-top:14px">Phương tiện</h3>
+      <div class="chips" id="rtModes"></div>
+      <button class="btn alt sm" id="rtIso" style="margin-top:4px">Vùng 30 phút từ điểm xuất phát</button>
+    </div>
+    <div id="rtOut"><div class="empty">Chọn điểm xuất phát và nơi đến (hoặc bấm ghim dự án trên bản đồ).</div></div>
+  </section>
+
+  <!-- THÔNG TIN TÁC GIẢ -->
+  <section class="tab" id="tab-about">
+    <h2>Thông tin tác giả</h2>
+    <div class="au-card">
+      <div class="au-name">Phạm Lê Huỳnh Ngân (DEE)</div>
+      <div class="au-school">Sinh viên ngành Trí tuệ nhân tạo, Trường Đại học Công nghệ Thông tin, Đại học Quốc gia Thành phố Hồ Chí Minh.</div>
+    </div>
+    <section class="pj-card au-sec"><h3>Về dự án</h3>
+      <p>Website được thực hiện trong khuôn khổ đồ án học tập năm 2026 của Phạm Lê Huỳnh Ngân. Đồ án tìm hiểu cách ứng dụng trí tuệ nhân tạo để tổ chức và trình bày thông tin bất động sản, giúp người dùng dễ tra cứu và tiếp cận thông tin trong quá trình tìm hiểu thị trường.</p>
+    </section>
+    <section class="pj-card au-sec"><h3>Phạm vi nghiên cứu</h3>
+      <p>Đề tài nghiên cứu ứng dụng học máy và phân tích không gian trong ước lượng giá bất động sản. Bên cạnh các thuộc tính của bất động sản, nghiên cứu xem xét mối liên hệ giữa giá, vị trí và khả năng tiếp cận qua mạng lưới giao thông. Bản đồ tương tác 3D hỗ trợ tra cứu và diễn giải kết quả trong bối cảnh đô thị.</p>
+    </section>
+    <section class="pj-card au-sec"><h3>Hướng phát triển</h3>
+      <p>Nghiên cứu có thể mở rộng dữ liệu ở cấp dự án, bao gồm chủ đầu tư và năm bàn giao, đồng thời khảo sát các mô hình có khả năng phản ánh sự khác biệt giữa các khu vực. Dữ liệu theo thời gian sẽ là cơ sở để phân tích biến động giá bất động sản quanh các tuyến metro. Hệ thống cũng có thể được mở rộng để hỗ trợ cập nhật dữ liệu và truy vấn không gian.</p>
+    </section>
+    <section class="pj-card au-sec"><h3>Disclaimer</h3>
+      <p>Nội dung trên website chỉ mang tính tham khảo và không thay thế tư vấn đầu tư, tài chính hoặc pháp lý.</p>
+    </section>
+  </section>
+
+  <!-- HỎI ĐÁP -->
+  <section class="tab chat" id="tab-chat">
+    <div class="msgs" id="msgs"></div>
+    <div class="suggest" id="suggest"></div>
+    <form class="ask" id="askForm">
+      <textarea id="askInput" rows="2" placeholder="Ví dụ: căn hộ 2 phòng ngủ dưới 5 tỷ, gần Metro số 1"></textarea>
+      <button type="submit" id="askBtn">Gửi</button>
+    </form>
+  </section>
+</aside>
+
+<dialog id="chatSettings">
+  <form method="dialog">
+    <h3>Kết nối trợ lý Claude</h3>
+    <p>Trợ lý dùng mô hình Claude để hiểu câu hỏi và tự gọi các công cụ tra cứu trên bản đồ. Chọn một cách kết nối:</p>
+    <label class="opt"><input type="radio" name="cm" value="proxy"> Máy chủ trung gian (khuyên dùng khi công khai web)</label>
+    <input id="proxyUrl" placeholder="https://bds-ai-proxy.<tên>.workers.dev">
+    <label class="opt"><input type="radio" name="cm" value="key"> Khoá API của chị (chỉ trên máy cá nhân)</label>
+    <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off">
+    <p class="warn">Khoá chỉ lưu trong trình duyệt này và gửi thẳng tới api.anthropic.com. Không nhập khoá trên máy dùng chung.</p>
+    <label class="opt"><input type="radio" name="cm" value="offline"> Không dùng LLM (bộ hiểu câu đơn giản, chạy ngay)</label>
+    <div class="row"><button value="cancel" class="ghost">Huỷ</button><button value="ok" id="saveSettings">Lưu</button></div>
+  </form>
+</dialog>
+
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="app.js?v=202611191500"></script>
+<script src="route.js?v=202611191500"></script>
+<script src="towers.js?v=202611191500"></script>
+<script src="metro3d.js?v=202611191500"></script>
+<script type="module" src="chat.js?v=202611191500"></script>
+</body>
+</html>
