@@ -55,6 +55,10 @@ P = [
     ("datxanh", "The Privé", CH, "Khu dân cư Nam Rạch Chiếc, phường An Phú (Quận 2 cũ)", [["Quy mô", "Khoảng 6,7 ha, 12 tháp 33–34 tầng"], ["Tiến độ", "Đã cất nóc; dự kiến bàn giao từ quý III/2027"]]),
     ("phatdat", "The EverRich Infinity", CH, "290 An Dương Vương, Quận 5 (cũ)", BG),
     ("phatdat", "The EverRich 1", CH, "968 Đường 3 Tháng 2, Quận 11 (cũ)", BG),
+    ("phatdat", "La Pura", CH, "Quốc lộ 13, phường Bình Hòa, Thuận An (cũ)", [["Tên cũ", "Astral City"], ["Ghi chú", "Phát Đạt tham gia phát triển (2025)"]]),
+    ("phatdat", "Bình Dương Tower", CH, "Phường Thuận Giao, Thuận An (cũ)", [["Quy mô", "Khoảng 4,55 ha"], ["Ghi chú", "Còn gọi Khu nhà ở phức hợp cao tầng Thuận An 1 & 2"]]),
+    ("phatdat", "The EverRich 3", NP, "Đường Phú Thuận, Quận 7 (cũ)", [["Ghi chú", "Đất nền, khu chân cầu Phú Thuận"]]),
+    ("phatdat", "Dự án 239 Cách Mạng Tháng Tám", CH, "239 Cách Mạng Tháng Tám, phường Bàn Cờ (Quận 3 cũ)", [["Quy mô", "Khoảng 3.500 m², phức hợp căn hộ – thương mại – văn phòng"], ["Tiến độ", "Phát Đạt nhận chuyển nhượng 11/2026, dự kiến đầu tư 2026–2030"]]),
     ("angia", "West Gate", CH, "Nguyễn Văn Linh nối dài, Bình Chánh (cũ)", BG),
     ("angia", "An Gia Garden", CH, "Tân Phú (cũ)", BG),
     ("angia", "An Gia Star", CH, "Bình Tân (cũ)", BG),
@@ -98,7 +102,10 @@ FIX = {"The Sun Avenue": [10.78417, 106.74617], "Lexington Residence": [10.79842
        "The EverRich 1": [10.76254, 106.6573],
        # quần thể Essensia Nam Sài Gòn / Celesta City trên Nguyễn Hữu Thọ (điểm dự án Chợ Tốt); Imperia Sensa Park: giao Võ Chí Công – Liên Phường (OSM)
        "Essensia Sky": [10.7056, 106.707], "Essensia Parkway": [10.7056, 106.707], "Celesta Gold": [10.7087, 106.7064],
-       "Imperia Sensa Park": [10.8068, 106.7915]}
+       "Imperia Sensa Park": [10.8068, 106.7915],
+       # Phát Đạt: La Pura = điểm dự án Chợ Tốt; 3 dự án còn lại ƯỚC TÍNH theo đường/phường (Nominatim), chờ chị gửi toạ độ chuẩn
+       "La Pura": [10.9058, 106.7306], "Bình Dương Tower": [10.9466, 106.7073], "The EverRich 3": [10.7331, 106.7381],
+       "Dự án 239 Cách Mạng Tháng Tám": [10.7751, 106.6866]}
 
 def locate(name, ct_name, addr):
     if name in FIX: return FIX[name], "osm"

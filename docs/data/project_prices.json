@@ -523,6 +523,26 @@
 "kind": "none",
 "note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
 },
+"phatdat-la-pura": {
+"kind": "rao_ban",
+"lo": 40,
+"hi": 46,
+"mid": 43.0,
+"note": "Giá tham khảo 2026 trên trang dự án (Astral City cũ)",
+"src": "https://astralcity.vn/"
+},
+"phatdat-binh-duong-tower": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
+"phatdat-the-everrich-3": {
+"kind": "thap_tang",
+"note": "Dự án nhà phố – biệt thự: giá tính theo căn, mô hình căn hộ không áp dụng."
+},
+"phatdat-du-an-239-cach-mang-thang-tam": {
+"kind": "none",
+"note": "Chưa có đủ dữ liệu giá thị trường cho dự án này."
+},
 "angia-west-gate": {
 "kind": "chotot",
 "mid": 43.4,

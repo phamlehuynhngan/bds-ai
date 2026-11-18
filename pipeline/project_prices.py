@@ -32,6 +32,8 @@ PRESS = {
         src="https://24hmoney.vn/news/can-ho-o-thu-thiem-lap-mat-bang-gia-moi-c3a2788410.html"),
     "Gladia by the Waters": dict(lo=72, hi=95, kind="so_cap", note="Căn hộ Gladia Heights, giá chủ đầu tư/môi giới rao",
         src="https://batdongsan.com.vn/nha-dat-ban-gladia-heights"),
+    "La Pura": dict(lo=40, hi=46, kind="rao_ban", note="Giá tham khảo 2026 trên trang dự án (Astral City cũ)",
+        src="https://astralcity.vn/"),
     "Vinhomes Green Paradise": dict(lo=60, hi=75, kind="du_kien", note="Căn hộ phân khu Imperia Green Paradise, giá tham khảo giai đoạn 1",
         src="https://cafeland.vn/du-an/imperia-green-paradise-phan-khu-can-ho-thuoc-vinhomes-green-paradise-tphcm-5328.html"),
 }
