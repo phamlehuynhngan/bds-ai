@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611171900";
+const V = "?v=202611181000";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -153,56 +153,69 @@ function showProject(id) {
       ${low ? `<dt>Giá</dt><dd>${esc(pp.note)}</dd>` : `<dt>Ước tính AI</dt><dd>≈ <b>${fmt(r.gia_trieu_m2)} triệu/m²</b> · căn 70 m², 2 PN ≈ ${fmt(r.tong_ty, 1)} tỷ${market(p.id) ? "" : " (chỉ theo vị trí, chưa có giá dự án)"}</dd>`}
       ${(p.info || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
     ${mkHTML(market(p.id))}
-    <div class="sec rt"><h3>Di chuyển (thuật toán A* / Dijkstra)</h3>
-      <div class="chips" id="rtModes">${Object.entries({moto: "Xe máy", car: "Ô tô", metro: "Đi bộ + Metro"}).map(([k, n]) => `<button class="chip ${state.rtMode === k ? "on" : ""}" data-m="${k}">${n}</button>`).join("")}</div>
-      <div class="rt-row"><select id="rtDest"><option value="">Chọn nơi đến…</option>${DESTS.map((d, i) => `<option value="${i}">${esc(d[0])}</option>`).join("")}<option value="map">📍 Chọn trên bản đồ</option></select>
-        <button class="btn alt sm" id="rtIso">Vùng 30 phút</button></div>
-      <div id="rtOut"></div></div>
     ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : `<p class="desc">Thông tin dự án đang cập nhật.</p>`}
-    ${low ? "" : `<button class="btn" id="pjValue">Định giá chi tiết</button>`} ${p.web ? `<a class="btn alt" href="${esc(p.web)}" target="_blank" rel="noopener">Web chủ đầu tư ↗</a>` : ""}`;
-  $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); stopOrbit(); window.ROUTER?.clear(); state.pickDest = false; };
-  state.rtFrom = [p.ll[1], p.ll[0]]; state.rtLast = null; window.ROUTER?.clear();
-  $("#rtModes").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; state.rtMode = b.dataset.m; $("#rtModes").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === b)); if (state.rtLast) runRoute(state.rtLast.to, state.rtLast.name); else if (state.isoOn) runIso(); };
-  $("#rtDest").onchange = e => { const v = e.target.value; if (v === "map") { state.pickDest = true; $("#rtOut").innerHTML = `<div class="empty">Bấm một điểm trên bản đồ làm nơi đến.</div>`; } else if (v !== "") { const d = DESTS[+v]; runRoute([d[2], d[1]], d[0]); } };
-  $("#rtIso").onclick = () => runIso();
+    ${low ? "" : `<button class="btn" id="pjValue">Định giá chi tiết</button>`} <button class="btn alt" id="pjMove">Di chuyển</button> ${p.web ? `<a class="btn alt" href="${esc(p.web)}" target="_blank" rel="noopener">Web chủ đầu tư ↗</a>` : ""}`;
+  $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); stopOrbit(); };
+  $("#pjMove").onclick = () => { setTab("move"); setOrigin(p.id); };
   if ($("#pjValue")) $("#pjValue").onclick = () => { setTab("price"); setPick(p.ll[0], p.ll[1], p.n, "Chủ đầu tư: " + esc(d.n), p.id); };
   map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}});
   stopOrbit(); window.metroStop?.();
   map.flyTo({center: [p.ll[1], p.ll[0]], zoom: p.poly ? 15.4 : 16.2, pitch: 60, bearing: map.getBearing() - 30, duration: 1800, essential: true});
   map.once("moveend", () => startOrbit());
 }
-/* ================= lộ trình A* & vùng di chuyển ================= */
+/* ================= tab Di chuyển (A* / Dijkstra trong route.js) ================= */
 const DESTS = [["Chợ Bến Thành", 10.77253, 106.69804], ["Phố đi bộ Nguyễn Huệ", 10.77541, 106.70014], ["Sân bay Tân Sơn Nhất", 10.81798, 106.65626],
   ["Landmark 81", 10.79508, 106.72191], ["Crescent Mall (Phú Mỹ Hưng)", 10.729, 106.71892], ["Bệnh viện Chợ Rẫy", 10.7567, 106.65973],
   ["Khu Công nghệ cao", 10.83801, 106.80849], ["Đại học Quốc gia TP.HCM", 10.86629, 106.80121]]; // toạ độ: Nominatim (OSM)
-state.rtMode = "moto";
+state.rtMode = "moto"; state.pickMode = null;
 const loadingHTML = t => `<div class="empty"><span class="dots"><i></i><i></i><i></i></span> ${t}</div>`;
+function renderMove() {
+  const ps = [...D.prj.projects].sort((a, b) => a.n.localeCompare(b.n, "vi"));
+  $("#mvFrom").innerHTML = `<option value="">Chọn dự án xuất phát…</option>` + ps.map(p => `<option value="${p.id}">${esc(p.n)}</option>`).join("") + `<option value="map">📍 Chọn trên bản đồ</option>`;
+  $("#mvDest").innerHTML = `<option value="">Chọn nơi đến…</option>` + DESTS.map((d, i) => `<option value="${i}">${esc(d[0])}</option>`).join("") + `<option value="map">📍 Chọn trên bản đồ</option>`;
+  $("#rtModes").innerHTML = Object.entries({moto: "Xe máy", car: "Ô tô", metro: "Đi bộ + Metro"}).map(([k, n]) => `<button class="chip ${state.rtMode === k ? "on" : ""}" data-m="${k}">${n}</button>`).join("");
+}
+function setOrigin(pid) {
+  const p = D.prj.projects.find(x => x.id === pid); if (!p) return;
+  state.rtFrom = [p.ll[1], p.ll[0]]; state.rtFromName = p.n; $("#mvFrom").value = pid;
+  map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: state.rtFrom}});
+  rerun(true);
+}
+function rerun(fly) {
+  if (!state.rtFrom) { $("#rtOut").innerHTML = `<div class="empty">Chọn điểm xuất phát.</div>`; return; }
+  if (state.rtLast) runRoute(state.rtLast.to, state.rtLast.name);
+  else if (state.isoOn) runIso();
+  else { window.ROUTER?.clear(); $("#rtOut").innerHTML = `<div class="empty">Chọn nơi đến hoặc bấm “Vùng 30 phút”.</div>`;
+    if (fly) { stopOrbit(); map.flyTo({center: state.rtFrom, zoom: 14, pitch: 50, duration: 1200}); } }
+}
 async function runRoute(to, name) {
+  if (!state.rtFrom) return rerun();
   state.rtLast = {to, name}; state.isoOn = false; window.ROUTER.clear();
-  $("#rtOut").innerHTML = loadingHTML("Đang nạp đồ thị đường và chạy A*…");
+  $("#rtOut").innerHTML = loadingHTML("Đang tìm đường…");
   try {
     const r = await window.ROUTER.route(state.rtFrom, to, state.rtMode), I = r.info; window.ROUTER.draw(r);
-    const save = 100 - I.astar.nut_mo_rong / I.dijkstra.nut_mo_rong * 100;
     $("#rtOut").innerHTML = `<div class="result"><div class="big">${fmt(I.phut, 0)} <small>phút</small></div>
       <div class="tot">${esc(I.ten_phuong_tien)} · ${fmt(I.km)} km tới <b>${esc(name)}</b></div>
-      ${I.mode === "metro" && I.km_di_bo > 2.5 ? `<div class="rng">Đoạn đi bộ dài (${fmt(I.km_di_bo)} km): thực tế nên kết hợp xe ôm/xe buýt tới ga.</div>` : ""}
-      ${I.di_metro ? `<div class="rng">Đi bộ ${fmt(I.km_di_bo)} km · ${I.di_metro.map(m => `lên ga <b>${esc(m.len_ga)}</b> → xuống ga <b>${esc(m.xuong_ga)}</b> (${m.so_ga} ga)`).join(", ")}</div>` : I.mode === "metro" ? `<div class="rng">Đi bộ toàn tuyến nhanh hơn đi Metro.</div>` : ""}</div>
-      <div class="algo"><b>A*</b> mở rộng ${I.astar.nut_mo_rong.toLocaleString("vi-VN")} nút (${fmt(I.astar.ms, 0)} ms) · <b>Dijkstra</b> ${I.dijkstra.nut_mo_rong.toLocaleString("vi-VN")} nút (${fmt(I.dijkstra.ms, 0)} ms)<br>
-      A* giảm ${fmt(save, 0)}% số nút phải xét${I.cung_ket_qua ? ", cùng lời giải tối ưu ✓" : ""}. Heuristic: đường chim bay ÷ vận tốc lớn nhất.</div>`;
+      ${I.di_metro ? `<div class="rng">Đi bộ ${fmt(I.km_di_bo)} km · ${I.di_metro.map(m => `lên ga <b>${esc(m.len_ga)}</b> → xuống ga <b>${esc(m.xuong_ga)}</b> (${m.so_ga} ga)`).join(", ")}</div>` : I.mode === "metro" ? `<div class="rng">Đi bộ toàn tuyến nhanh hơn đi Metro.</div>` : ""}
+      ${I.mode === "metro" && I.km_di_bo > 2.5 ? `<div class="rng">Đoạn đi bộ dài: nên kết hợp xe ôm/xe buýt tới ga.</div>` : ""}</div>`;
   } catch (e) { $("#rtOut").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 async function runIso() {
-  state.rtLast = null; state.isoOn = true; window.ROUTER.clear();
-  $("#rtOut").innerHTML = loadingHTML("Đang chạy Dijkstra tính vùng 30 phút…");
+  if (!state.rtFrom) return rerun();
+  state.rtLast = null; state.isoOn = true; $("#mvDest").value = ""; window.ROUTER.clear();
+  $("#rtOut").innerHTML = loadingHTML("Đang tính vùng 30 phút…");
   try {
     const r = await window.ROUTER.isochrone(state.rtFrom, state.rtMode, 30), I = r.info; window.ROUTER.drawIso(r);
     stopOrbit(); map.flyTo({center: state.rtFrom, zoom: state.rtMode === "metro" ? 12.4 : 11.6, pitch: 35, duration: 1200});
-    $("#rtOut").innerHTML = `<div class="result"><div class="tot">Trong <b>30 phút</b> ${esc(window.ROUTER.MODES[state.rtMode].name.toLowerCase())} tới được <b>${I.so_doan_duong.toLocaleString("vi-VN")}</b> đoạn đường</div>
+    $("#rtOut").innerHTML = `<div class="result"><div class="tot">Trong <b>30 phút</b> ${esc(window.ROUTER.MODES[state.rtMode].name.toLowerCase())} từ <b>${esc(state.rtFromName)}</b></div>
       <div class="iso-lg"><span><i style="background:#2e8b57"></i>0–10′</span><span><i style="background:#e0b232"></i>10–20′</span><span><i style="background:#e07a2a"></i>20–30′</span></div>
-      ${I.ga_metro_toi_duoc.length ? `<div class="rng">Ga Metro trong tầm: ${I.ga_metro_toi_duoc.map(esc).join(", ")}</div>` : ""}</div>
-      <div class="algo">Dijkstra một nguồn, dừng khi thời gian vượt 30 phút · ${fmt(I.dijkstra_ms, 0)} ms · ${I.so_nut_toi_duoc.toLocaleString("vi-VN")} nút tới được.</div>`;
+      ${I.ga_metro_toi_duoc.length ? `<div class="rng">Ga Metro trong tầm: ${I.ga_metro_toi_duoc.map(esc).join(", ")}</div>` : ""}</div>`;
   } catch (e) { $("#rtOut").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
+$("#mvFrom").onchange = e => { const v = e.target.value; if (v === "map") { state.pickMode = "from"; $("#rtOut").innerHTML = `<div class="empty">Bấm một điểm trên bản đồ làm điểm xuất phát.</div>`; } else if (v) setOrigin(v); };
+$("#mvDest").onchange = e => { const v = e.target.value; if (v === "map") { state.pickMode = "to"; $("#rtOut").innerHTML = `<div class="empty">Bấm một điểm trên bản đồ làm nơi đến.</div>`; } else if (v !== "") { const d = DESTS[+v]; runRoute([d[2], d[1]], d[0]); } };
+$("#rtModes").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; state.rtMode = b.dataset.m; $("#rtModes").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === b)); rerun(); };
+$("#rtIso").onclick = () => runIso();
 
 $("#devAcc").addEventListener("click", e => {
   const it = e.target.closest(".item"); if (it) { showProject(it.dataset.id); return; }
@@ -256,7 +269,8 @@ function showHits(points, fit = true) { // points: [{lat, lon, label}]
 
 /* ================= điều hướng tab ================= */
 const LAYERS = {
-  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "iso", "route-case", "route", "route-walk", "route-ends"],
+  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d"],
+  move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "iso", "route-case", "route", "route-walk", "route-ends"],
   metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d"],
   price: ["grid", "ls", "pj", "metro-l", "metro-s"],
   chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d", "iso", "route-case", "route", "route-walk", "route-ends"],
@@ -268,7 +282,7 @@ function setTab(t) {
   if (!map?.getLayer("grid")) return;
   ALL.forEach(id => map.getLayer(id) && map.setLayoutProperty(id, "visibility", LAYERS[t].includes(id) ? "visible" : "none"));
   if (t === "price") { if (!$("#lyListings").checked) map.setLayoutProperty("ls", "visibility", "none"); if (!$("#lyProjects").checked) map.setLayoutProperty("pj", "visibility", "none"); }
-  map.setLayoutProperty("pick", "visibility", t === "price" || t === "projects" ? "visible" : "none");
+  map.setLayoutProperty("pick", "visibility", ["price", "projects", "move"].includes(t) ? "visible" : "none");
   map.setPaintProperty("pj", "circle-radius", t === "metro" ? 4 : 6);
   if (t !== "metro") window.metroStop?.();
   if (t === "price") { stopOrbit(); map.easeTo({pitch: 50, zoom: Math.min(map.getZoom(), 12), duration: 900}); }
@@ -287,7 +301,7 @@ async function boot() {
   F = D.model.features;
   $("#mode").innerHTML = MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
   $("#disc").innerHTML = `Mô hình học từ <b>${D.model.n.toLocaleString("vi-VN")}</b> tin rao bán căn hộ (${esc(D.model.collected)}), sai số trung bình ${fmt(D.model.err_pct)}% với căn thuộc dự án đã có giá, ${fmt(D.model.results[3]["MAPE_%"])}% khi chỉ biết vị trí. Giá tin rao là giá chào bán, không phải giá giao dịch. Kết quả chỉ để tham khảo.`;
-  renderProjects(); renderMetro();
+  renderProjects(); renderMetro(); renderMove();
   map = new maplibregl.Map({container: "map", style: "https://tiles.openfreemap.org/styles/positron", center: [106.715, 10.785], zoom: 12.2, pitch: 55, bearing: -20, maxPitch: 75, attributionControl: false});
   map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: "Tin rao: Chợ Tốt Nhà"}));
   map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), "bottom-right");
@@ -337,9 +351,12 @@ async function boot() {
     setMode("p"); renderProjects(); setTab(state.tab); startOrbit(2.5);
     map.on("click", e => {
       const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0];
-      if (state.tab === "projects") {
-        if (state.pickDest) { state.pickDest = false; $("#rtDest").value = ""; runRoute([e.lngLat.lng, e.lngLat.lat], "điểm đã chọn"); return; }
-        if (f) showProject(f.properties.id); return; }
+      if (state.tab === "projects") { if (f) showProject(f.properties.id); return; }
+      if (state.tab === "move") {
+        if (state.pickMode === "to") { state.pickMode = null; runRoute([e.lngLat.lng, e.lngLat.lat], "điểm đã chọn"); return; }
+        if (state.pickMode === "from") { state.pickMode = null; state.rtFrom = [e.lngLat.lng, e.lngLat.lat]; state.rtFromName = "điểm đã chọn";
+          map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: state.rtFrom}}); rerun(); return; }
+        if (f) setOrigin(f.properties.id); return; }
       if (state.tab === "price") { if (f) { const [lon, lat] = f.geometry.coordinates; setPick(lat, lon, f.properties.n, "Chủ đầu tư: " + esc(f.properties.d), f.properties.id); } else setPick(e.lngLat.lat, e.lngLat.lng); }
       if (state.tab === "metro" && f) { setTab("projects"); showProject(f.properties.id); }
     });

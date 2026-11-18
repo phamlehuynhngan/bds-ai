@@ -52,7 +52,7 @@
     })();
     return ready;
   }
-  const VERSION = "202611171900";
+  const VERSION = "202611171900"; // đổi khi dựng lại graph.bin.gz
 
   const km = (a, b, c, d) => Math.hypot((a - c) * KM_LON, (b - d) * KM_LAT); // (lon,lat,lon,lat)
   function nearest(lon, lat, maxKm = 1.5) {

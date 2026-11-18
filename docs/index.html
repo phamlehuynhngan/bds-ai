@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
-<link rel="stylesheet" href="app.css?v=202611171900">
+<link rel="stylesheet" href="app.css?v=202611181000">
 </head>
 <body data-tab="projects">
 <header class="top">
@@ -19,7 +19,8 @@
     <button data-t="projects" class="on">Dự án</button>
     <button data-t="metro">Metro</button>
     <button data-t="price">Bản đồ giá</button>
-    <button data-t="chat">Hỏi đáp</button>
+    <button data-t="move">Di chuyển</button>
+    <button data-t="chat" hidden>Hỏi đáp</button>
   </nav>
 </header>
 
@@ -75,6 +76,21 @@
     <div class="disc" id="disc"></div>
   </section>
 
+  <!-- DI CHUYỂN -->
+  <section class="tab" id="tab-move">
+    <h2>Di chuyển</h2>
+    <div class="sub">Thời gian đi từ dự án tới các điểm trong thành phố.</div>
+    <div class="sec">
+      <h3>Điểm xuất phát</h3>
+      <select class="sel" id="mvFrom"></select>
+      <h3 style="margin-top:14px">Phương tiện</h3>
+      <div class="chips" id="rtModes"></div>
+      <h3 style="margin-top:6px">Nơi đến</h3>
+      <div class="rt-row"><select id="mvDest"></select><button class="btn alt sm" id="rtIso">Vùng 30 phút</button></div>
+    </div>
+    <div id="rtOut"><div class="empty">Chọn dự án xuất phát (hoặc bấm ghim dự án trên bản đồ).</div></div>
+  </section>
+
   <!-- HỎI ĐÁP -->
   <section class="tab chat" id="tab-chat">
     <div class="msgs" id="msgs"></div>
@@ -101,9 +117,9 @@
 </dialog>
 
 <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script src="app.js?v=202611171900"></script>
-<script src="route.js?v=202611171900"></script>
-<script src="metro3d.js?v=202611171900"></script>
-<script type="module" src="chat.js?v=202611171900"></script>
+<script src="app.js?v=202611181000"></script>
+<script src="route.js?v=202611181000"></script>
+<script src="metro3d.js?v=202611181000"></script>
+<script type="module" src="chat.js?v=202611181000"></script>
 </body>
 </html>
