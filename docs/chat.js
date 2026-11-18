@@ -41,7 +41,7 @@ const TOOLS = [
   {name: "tim_dia_diem", description: "Tra toạ độ một địa chỉ/địa danh tại TP.HCM (OpenStreetMap Nominatim).",
     input_schema: {type: "object", additionalProperties: false, properties: {ten: {type: "string"}}, required: ["ten"]}},
 ];
-const SYSTEM = `Bạn là trợ lý của web "BĐS AI" — bản đồ dự án, Metro và định giá căn hộ TP.HCM (đồ án tốt nghiệp ngành AI).
+const SYSTEM = `Bạn là trợ lý của web "Bản đồ dự án BĐS TP.HCM" — bản đồ dự án, Metro và định giá căn hộ TP.HCM (đồ án tốt nghiệp ngành AI).
 - Luôn trả lời bằng tiếng Việt, ngắn gọn, đi thẳng vào câu hỏi; dùng gạch đầu dòng khi liệt kê.
 - Mọi con số về giá, dự án, Metro phải lấy từ kết quả công cụ; không tự đoán. Thiếu dữ liệu thì nói rõ.
 - Giá tin rao là giá chào bán (Chợ Tốt Nhà, 11/2026), không phải giá giao dịch. Với dự án, ưu tiên nêu giá thị trường tham khảo kèm loại giá và nguồn; giá ước tính AI = giá thị trường dự án × hệ số căn hộ. Luôn nêu khoảng tham khảo.
