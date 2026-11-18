@@ -1,7 +1,7 @@
 # Bàn giao: BĐS AI (đồ án tốt nghiệp ngành AI)
 Repo này là web đồ án tách từ `phamlehuynhngan/bdsvietnam` (web map dự án). Web: GitHub Pages thư mục `docs/`.
 Người dùng: "chị" (xưng "em"), trả lời tiếng Việt, ngắn gọn. Commit với `-c user.name="phamlehuynhngan" -c user.email="phamlehuynhngan@users.noreply.github.com"`.
-- Tên web (đầu trang): "BẢN ĐỒ DỰ ÁN BĐS TP.HCM", dòng dưới "Phạm Lê Huỳnh Ngân (DEE)" (chị đổi 19/11/2026, thay "BĐS AI"); điện thoại: --top 106px, tên xuống dòng.
+- Tên web (đầu trang): chỉ "BẢN ĐỒ DỰ ÁN BĐS TP.HCM" (thay "BĐS AI" + dòng phụ, chị đổi 19/11/2026). Tab Tác giả: tên "Phạm Lê Huỳnh Ngân (DEE)".
 - Web: `docs/index.html` (khung) + `app.css` + `app.js` (bản đồ, 4 tab, mô hình chạy trong trình duyệt, `window.APP`) + `chat.js` (trợ lý). Sau mỗi lần sửa đổi `?v=YYYYMMDDHHMM` trong index.html và `const V` trong app.js.
 - Tab: Dự án · Metro · Bản đồ giá · Kết nối (`data-t="move"`, trước tên là Di chuyển) · Thông tin tác giả (`data-t="about"`, `#tab-about`: nội dung chị tự viết 19/11/2026 — thẻ tên, "Về dự án", "Nghiên cứu thực hiện đề tài" (kiến thức áp dụng + hướng phát triển), "Lưu ý khi sử dụng"; giữ nguyên câu chữ; trên điện thoại nút hiện "Tác giả"). Sau khi sửa web: đẩy lên cả main (GitHub Pages chạy từ main). Tab "Mô hình" và "Hỏi đáp" đang ẩn theo yêu cầu chị (nút `data-t="chat"` có `hidden`; bỏ `hidden` để hiện lại).
 - Bản đồ 3D: pitch 55, nhà 3D lớp `b3d` (OSM), xoay chậm khi mở web và quanh dự án đang chọn (`startOrbit/stopOrbit`, dừng khi chạm bản đồ). Bản đồ giá = cột 3D (cao = giá/m² × 4 m).
