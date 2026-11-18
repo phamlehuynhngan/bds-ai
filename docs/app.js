@@ -1,5 +1,5 @@
 /* BĐS AI – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611181230";
+const V = "?v=202611181430";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -182,31 +182,47 @@ async function geocode(q) {
   const out = r.map(x => { const parts = x.display_name.split(", "); return {n: x.name || parts[0], sub: parts.slice(1, 4).join(", "), lat: +x.lat, lon: +x.lon, k: "geo"}; });
   GEO_CACHE.set(q, out); return out;
 }
-function localSug(q, kind) {
-  const n = norm(q), all = [
-    ...D.prj.projects.map(p => ({n: p.n, sub: "Dự án · " + devOf(p).n, lat: p.ll[0], lon: p.ll[1], pid: p.id, k: "pj"})),
-    ...DESTS.map(d => ({n: d[0], sub: "Địa điểm nổi bật", lat: d[1], lon: d[2], k: "poi"})),
-    ...D.metro.stations.map(s => ({n: "Ga " + s[0], sub: "Metro số 1", lat: s[1], lon: s[2], k: "st"}))];
-  if (!n) return kind === "from" ? all.filter(x => x.k === "pj").slice(0, 8) : all.filter(x => x.k === "poi");
-  const hit = all.filter(x => norm(x.n).includes(n));
-  return hit.sort((a, b) => norm(b.n).startsWith(n) - norm(a.n).startsWith(n)).slice(0, 8);
+const AGRP = {icon: "Điểm nổi bật", public: "Không gian công cộng", transport: "Giao thông", park: "Công viên", shop: "Mua sắm", expo: "Triển lãm – hội nghị", health: "Y tế", edu: "Giáo dục"};
+let PLACES = null;
+async function loadPlaces() { if (!PLACES) PLACES = fetch("data/places.json" + V).then(r => r.json()).catch(() => []); return PLACES; }
+function sugBase() {
+  if (D._sug) return D._sug;
+  return D._sug = [
+    ...D.prj.projects.map(p => ({n: p.n, sub: "Dự án · " + devOf(p).n, lat: p.ll[0], lon: p.ll[1], pid: p.id, k: "pj", g: "Dự án"})),
+    ...(D.rivals || []).map(r => ({n: r[0], sub: "Dự án · " + r[1], lat: r[2], lon: r[3], k: "pj2", g: "Dự án khác"})),
+    ...(D.anchors || []).map(a => ({n: a[0], sub: AGRP[a[1]] || "Tiện ích", lat: a[3], lon: a[4], k: "am", g: "Tiện ích nổi bật", t: a[2]})),
+    ...DESTS.filter(d => !(D.anchors || []).some(a => norm(a[0]) === norm(d[0]))).map(d => ({n: d[0], sub: "Địa điểm nổi bật", lat: d[1], lon: d[2], k: "poi", g: "Tiện ích nổi bật"})),
+    ...D.metro.stations.map(s => ({n: "Ga " + s[0], sub: "Metro số 1", lat: s[1], lon: s[2], k: "st", g: "Ga Metro số 1"}))];
+}
+function localSug(q, places) {
+  const n = norm(q), all = sugBase();
+  if (!n) return all; // để trống: hiện đủ danh sách theo nhóm
+  const KO = {pj: 0, pj2: 1, am: 2, poi: 2, st: 3};
+  const hit = all.filter(x => norm(x.n).includes(n)), st = x => norm(x.n).startsWith(n) ? 0 : 1;
+  hit.sort((a, b) => KO[a.k] - KO[b.k] || st(a) - st(b)); // dự án lên đầu
+  const pl = (places || []).filter(x => norm(x[0]).includes(n) && !hit.some(h => norm(h.n) === norm(x[0])))
+    .sort((a, b) => (norm(b[0]).startsWith(n) ? 1 : 0) - (norm(a[0]).startsWith(n) ? 1 : 0)).slice(0, 10)
+    .map(x => ({n: x[0], sub: x[1], lat: x[2], lon: x[3], k: "osm", g: "Tiện ích"}));
+  return [...hit.slice(0, 10), ...pl];
 }
 function combo(id, kind) {
   const inp = $("#" + id), box = $("#" + id + "Sug"); let timer = null, seq = 0, items = [];
-  const ICON = {pj: "🏢", poi: "⭐", st: "🚇", geo: "📍"};
+  const ICON = {pj: "🏢", pj2: "🏘️", am: "⭐", poi: "⭐", st: "🚇", osm: "📌", geo: "📍"};
   const draw = (list, loading) => {
-    items = list;
-    box.innerHTML = list.map((x, i) => `<button data-i="${i}"><span>${ICON[x.k]}</span><b>${esc(x.n)}</b><small>${esc(x.sub || "")}</small></button>`).join("")
-      + (loading ? `<div class="sug-load">Đang tìm trên bản đồ…</div>` : "")
-      + `<button data-i="map"><span>🖱️</span><b>Chọn trên bản đồ</b><small>Bấm một điểm bất kỳ</small></button>`;
+    if (document.activeElement !== inp) return; // đã chọn xong / rời ô
+    items = list; let g = null;
+    box.innerHTML = list.map((x, i) => (x.g !== g ? `<div class="sug-g">${esc((g = x.g) || "")}</div>` : "") + `<button data-i="${i}"><span>${ICON[x.k]}</span><b>${esc(x.n)}</b><small>${esc(x.sub || "")}</small></button>`).join("")
+      + (loading ? `<div class="sug-load">Đang tìm thêm trên bản đồ…</div>` : "")
+      + `<div class="sug-g"></div><button data-i="map"><span>🖱️</span><b>Chọn trên bản đồ</b><small>Bấm một điểm bất kỳ</small></button>`;
     box.hidden = false;
   };
-  const update = () => {
-    const q = inp.value.trim(), loc = localSug(q, kind), my = ++seq; draw(loc, q.length >= 3);
+  const update = async () => {
+    const q = inp.value.trim(), my = ++seq, pl = q ? await loadPlaces() : null; if (my !== seq) return;
+    const loc = localSug(q, pl); draw(loc, q.length >= 3);
     clearTimeout(timer);
-    if (q.length >= 3) timer = setTimeout(async () => { const g = await geocode(q + ", Hồ Chí Minh"); if (my === seq) draw([...loc, ...g.filter(x => !loc.some(l => norm(l.n) === norm(x.n)))].slice(0, 12)); }, 450);
+    if (q.length >= 3) timer = setTimeout(async () => { const g = await geocode(q + ", Hồ Chí Minh"); if (my === seq) draw([...loc, ...g.filter(x => !loc.some(l => norm(l.n) === norm(x.n))).map(x => ({...x, g: "Địa chỉ"}))]); }, 450);
   };
-  inp.addEventListener("focus", () => { inp.select(); update(); });
+  inp.addEventListener("focus", () => { inp.select(); update(); loadPlaces(); });
   inp.addEventListener("input", update);
   inp.addEventListener("keydown", e => { if (e.key === "Enter" && items[0]) { e.preventDefault(); choose(items[0]); } if (e.key === "Escape") box.hidden = true; });
   inp.addEventListener("blur", () => setTimeout(() => box.hidden = true, 200));
@@ -215,11 +231,17 @@ function combo(id, kind) {
       state.pickMode = kind; $("#rtOut").innerHTML = `<div class="empty">Bấm một điểm trên bản đồ làm ${kind === "from" ? "điểm xuất phát" : "nơi đến"}.</div>`; return; }
     choose(items[+b.dataset.i]); });
   function choose(x) {
-    box.hidden = true; inp.value = x.n; inp.blur();
-    if (kind === "from") { if (x.pid) setOrigin(x.pid); else setOriginPt([x.lon, x.lat], x.n); }
-    else runRoute([x.lon, x.lat], x.n);
+    seq++; clearTimeout(timer); box.hidden = true; inp.value = x.n; inp.blur();
+    if (kind === "from") setOriginPt([x.lon, x.lat], x.n); else { state.rtTo = {to: [x.lon, x.lat], name: x.n}; runRoute([x.lon, x.lat], x.n); }
   }
 }
+$("#mvSwap").onclick = () => {
+  const f = state.rtFrom ? {to: state.rtFrom, name: state.rtFromName} : null, t = state.rtLast || state.rtTo;
+  if (!f || !t) return;
+  $("#mvFrom").value = t.name; $("#mvDest").value = f.name;
+  state.rtFrom = t.to; state.rtFromName = t.name; map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: state.rtFrom}});
+  state.rtTo = f; runRoute(f.to, f.name);
+};
 function setOriginPt(pt, name) {
   state.rtFrom = pt; state.rtFromName = name; $("#mvFrom").value = name;
   map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: pt}}); rerun(true);
@@ -237,13 +259,15 @@ function rerun(fly) {
 }
 async function runRoute(to, name) {
   if (!state.rtFrom) return rerun();
-  state.rtLast = {to, name}; state.isoOn = false; window.ROUTER.clear();
-  $("#rtOut").innerHTML = loadingHTML("Đang tìm đường…");
+  state.rtLast = {to, name}; state.rtTo = {to, name}; state.isoOn = false; window.ROUTER.clear();
+  $("#rtOut").innerHTML = loadingHTML("Đang tìm đường hai chiều…");
   try {
-    const r = await window.ROUTER.route(state.rtFrom, to, state.rtMode), I = r.info; window.ROUTER.draw(r);
-    $("#rtOut").innerHTML = `<div class="result"><div class="big">${fmt(I.phut, 0)} <small>phút</small></div>
-      <div class="tot">${esc(I.ten_phuong_tien)} · ${fmt(I.km)} km tới <b>${esc(name)}</b></div>
-      ${I.di_metro ? `<div class="rng">Đi bộ ${fmt(I.km_di_bo)} km · ${I.di_metro.map(m => `lên ga <b>${esc(m.len_ga)}</b> → xuống ga <b>${esc(m.xuong_ga)}</b> (${m.so_ga} ga)`).join(", ")}</div>` : I.mode === "metro" ? `<div class="rng">Đi bộ toàn tuyến nhanh hơn đi Metro.</div>` : ""}
+    const [r, back] = await Promise.all([window.ROUTER.route(state.rtFrom, to, state.rtMode), window.ROUTER.route(to, state.rtFrom, state.rtMode).catch(() => null)]);
+    const I = r.info, B = back?.info; window.ROUTER.draw(r);
+    const leg = (x, lbl) => `<div class="leg"><div class="lh">${lbl}</div><div class="big">${fmt(x.phut, 0)} <small>phút</small></div><div class="rng">${fmt(x.km)} km${x.di_metro ? ` · lên ga <b>${esc(x.di_metro[0].len_ga)}</b> → xuống <b>${esc(x.di_metro.at(-1).xuong_ga)}</b>` : ""}</div></div>`;
+    $("#rtOut").innerHTML = `<div class="result"><div class="tot">${esc(I.ten_phuong_tien)} · <b>${esc(state.rtFromName || "Điểm xuất phát")}</b> ⇄ <b>${esc(name)}</b></div>
+      <div class="legs">${leg(I, "Chiều đi")}${B ? leg(B, "Chiều về") : `<div class="leg"><div class="lh">Chiều về</div><div class="rng">Chưa tìm được đường về</div></div>`}</div>
+      ${I.mode === "metro" && !I.di_metro ? `<div class="rng">Đi bộ toàn tuyến nhanh hơn đi Metro.</div>` : ""}
       ${I.mode === "metro" && I.km_di_bo > 2.5 ? `<div class="rng">Đoạn đi bộ dài: nên kết hợp xe ôm/xe buýt tới ga.</div>` : ""}</div>`;
   } catch (e) { $("#rtOut").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
@@ -314,11 +338,11 @@ function showHits(points, fit = true) { // points: [{lat, lon, label}]
 
 /* ================= điều hướng tab ================= */
 const LAYERS = {
-  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d"],
-  move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "iso", "route-case", "route", "route-walk", "route-ends"],
-  metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d"],
+  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "towers"],
+  move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
+  metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d", "towers"],
   price: ["grid", "ls", "pj", "metro-l", "metro-s"],
-  chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d", "iso", "route-case", "route", "route-walk", "route-ends"],
+  chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
 };
 const ALL = [...new Set(Object.values(LAYERS).flat())];
 function setTab(t) {
@@ -342,7 +366,7 @@ $("#lyProjects").onchange = e => map.setLayoutProperty("pj", "visibility", e.tar
 /* ================= khởi động ================= */
 async function boot() {
   const j = u => fetch("data/" + u + V).then(r => r.json());
-  [D.model, D.trees, D.poi, D.metro, D.prj, D.list, D.infra, D.pp] = await Promise.all(["model.json", "trees.json", "poi.json", "metro.json", "projects.json", "listings.json", "infra.json", "project_prices.json"].map(j));
+  [D.model, D.trees, D.poi, D.metro, D.prj, D.list, D.infra, D.pp, D.anchors, D.rivals] = await Promise.all(["model.json", "trees.json", "poi.json", "metro.json", "projects.json", "listings.json", "infra.json", "project_prices.json", "anchors.json", "rivals.json"].map(j));
   F = D.model.features;
   $("#mode").innerHTML = MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
   $("#disc").innerHTML = `Giá tin rao là giá chào bán, không phải giá giao dịch, sai số trung bình ${fmt(D.model.results[3]["MAPE_%"])}% so với thực tế. Kết quả chỉ để tham khảo. Nguồn Internet.`;

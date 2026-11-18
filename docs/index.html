@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
-<link rel="stylesheet" href="app.css?v=202611181230">
+<link rel="stylesheet" href="app.css?v=202611181430">
 </head>
 <body data-tab="projects">
 <header class="top">
@@ -19,7 +19,7 @@
     <button data-t="projects" class="on">Dự án</button>
     <button data-t="metro">Metro</button>
     <button data-t="price">Bản đồ giá</button>
-    <button data-t="move">Di chuyển</button>
+    <button data-t="move">Kết nối</button>
     <button data-t="chat" hidden>Hỏi đáp</button>
   </nav>
 </header>
@@ -78,18 +78,21 @@
 
   <!-- DI CHUYỂN -->
   <section class="tab" id="tab-move">
-    <h2>Di chuyển</h2>
-    <div class="sub">Thời gian đi từ dự án tới các điểm trong thành phố.</div>
+    <h2>Kết nối</h2>
+    <div class="sub">Thời gian di chuyển hai chiều giữa dự án, tiện ích và mọi địa điểm ở TP.HCM.</div>
     <div class="sec">
-      <h3>Điểm xuất phát</h3>
-      <div class="combo"><input id="mvFrom" placeholder="Tìm dự án, địa chỉ, địa điểm…" autocomplete="off"><div class="sug" id="mvFromSug" hidden></div></div>
+      <div class="od">
+        <div class="od-f"><h3>Điểm xuất phát</h3>
+          <div class="combo"><input id="mvFrom" placeholder="Tìm dự án, tiện ích, địa chỉ…" autocomplete="off"><div class="sug" id="mvFromSug" hidden></div></div>
+          <h3 style="margin-top:12px">Nơi đến</h3>
+          <div class="combo"><input id="mvDest" placeholder="Tìm dự án, tiện ích, địa chỉ…" autocomplete="off"><div class="sug" id="mvDestSug" hidden></div></div></div>
+        <button class="swap" id="mvSwap" title="Đổi chiều">⇅</button>
+      </div>
       <h3 style="margin-top:14px">Phương tiện</h3>
       <div class="chips" id="rtModes"></div>
-      <h3 style="margin-top:6px">Nơi đến</h3>
-      <div class="combo"><input id="mvDest" placeholder="Tìm bất kỳ địa điểm nào ở TP.HCM…" autocomplete="off"><div class="sug" id="mvDestSug" hidden></div></div>
-      <button class="btn alt sm" id="rtIso" style="margin-top:10px">Vùng 30 phút từ điểm xuất phát</button>
+      <button class="btn alt sm" id="rtIso" style="margin-top:4px">Vùng 30 phút từ điểm xuất phát</button>
     </div>
-    <div id="rtOut"><div class="empty">Chọn dự án xuất phát (hoặc bấm ghim dự án trên bản đồ).</div></div>
+    <div id="rtOut"><div class="empty">Chọn điểm xuất phát và nơi đến (hoặc bấm ghim dự án trên bản đồ).</div></div>
   </section>
 
   <!-- HỎI ĐÁP -->
@@ -118,9 +121,10 @@
 </dialog>
 
 <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script src="app.js?v=202611181230"></script>
-<script src="route.js?v=202611181230"></script>
-<script src="metro3d.js?v=202611181230"></script>
-<script type="module" src="chat.js?v=202611181230"></script>
+<script src="app.js?v=202611181430"></script>
+<script src="route.js?v=202611181430"></script>
+<script src="towers.js?v=202611181430"></script>
+<script src="metro3d.js?v=202611181430"></script>
+<script type="module" src="chat.js?v=202611181430"></script>
 </body>
 </html>
