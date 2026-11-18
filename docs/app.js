@@ -1,5 +1,5 @@
 /* Bản đồ dự án BĐS TP.HCM – bản đồ dự án, Metro, định giá (không cần máy chủ) */
-const V = "?v=202611191600";
+const V = "?v=202611191700";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = (x, d = 1) => Number(x).toLocaleString("vi-VN", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -175,11 +175,12 @@ function showProject(id) {
       ${p.web ? `<a class="btn alt ic" href="${esc(p.web)}" target="_blank" rel="noopener" title="Web chủ đầu tư">Web CĐT ↗</a>` : ""}
     </div>`;
   if ($("#pjMore")) $("#pjMore").onclick = () => { const o = $("#pjDesc").classList.toggle("open"); $("#pjMore").textContent = o ? "Thu gọn" : "Xem thêm"; };
-  $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); stopOrbit(); };
+  $("#pjBack").onclick = () => { $("#pjDetail").hidden = true; $("#pjList").hidden = false; map.getSource("pick").setData(FC([])); map.setFilter("pj-sel", ["==", ["get", "id"], ""]); stopOrbit(); };
   $("#pjMove").onclick = () => { setTab("move"); setOrigin(p.id); };
   if ($("#pjValue")) $("#pjValue").onclick = () => { setTab("price"); setPick(p.ll[0], p.ll[1], p.n, "Chủ đầu tư: " + esc(d.n), p.id); };
   map.getSource("pick").setData({type: "Feature", geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}});
   stopOrbit(); window.metroStop?.();
+  if (map.getLayer("pj-sel")) { map.setFilter("pj-sel", ["==", ["get", "id"], p.id]); ["pj", "pj-t", "pj-sel"].forEach(id => map.moveLayer(id)); }
   flyOrbit({center: [p.ll[1], p.ll[0]], zoom: p.poly ? 15.4 : 16.2, pitch: 60, bearing: map.getBearing() - 30, duration: 1800});
 }
 /* ================= tab Di chuyển (A* / Dijkstra trong route.js) ================= */
@@ -423,11 +424,11 @@ function showHits(points, fit = true) { // points: [{lat, lon, label}]
 
 /* ================= điều hướng tab ================= */
 const LAYERS = {
-  projects: ["pj", "pj-t", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "towers", ...ANCHOR_LAYERS],
-  move: ["pj", "pj-t", "metro-l", "metro-s", "metro-sl", "b3d", "towers", ...ANCHOR_LAYERS, "iso", "route-case", "route", "route-walk", "route-ends"],
+  projects: ["pj", "pj-t", "pj-sel", "pjp-f", "pjp-l", "metro-l", "metro-s", "b3d", "towers", ...ANCHOR_LAYERS],
+  move: ["pj", "pj-t", "pj-sel", "metro-l", "metro-s", "metro-sl", "b3d", "towers", ...ANCHOR_LAYERS, "iso", "route-case", "route", "route-walk", "route-ends"],
   metro: ["metro-l", "metro-s", "metro-sl", "im-case", "im-build", "im-plan", "rings", "pj", "b3d", "towers", ...ANCHOR_LAYERS],
   price: ["grid", "ls", "pj", "metro-l", "metro-s"],
-  about: ["pj", "metro-l", "metro-s", "b3d", "towers", ...ANCHOR_LAYERS],
+  about: ["pj", "pj-t", "pj-sel", "metro-l", "metro-s", "b3d", "towers", ...ANCHOR_LAYERS],
   chat: ["pj", "pj-t", "metro-l", "metro-s", "hits", "hits-t", "b3d", "towers", "iso", "route-case", "route", "route-walk", "route-ends"],
 };
 const ALL = [...new Set(Object.values(LAYERS).flat())];
@@ -436,6 +437,7 @@ function setTab(t) {
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
   if (!map?.getLayer("grid")) return;
   ALL.forEach(id => map.getLayer(id) && map.setLayoutProperty(id, "visibility", LAYERS[t].includes(id) ? "visible" : "none"));
+  ["pj", "pj-t", "pj-sel"].forEach(id => map.getLayer(id) && map.moveLayer(id));  // ghim + tag luôn nằm trên khối 3D
   if (t === "price") { if (!$("#lyListings").checked) map.setLayoutProperty("ls", "visibility", "none"); if (!$("#lyProjects").checked) map.setLayoutProperty("pj", "visibility", "none"); }
   map.setLayoutProperty("pick", "visibility", ["price", "projects", "move"].includes(t) ? "visible" : "none");
   map.setPaintProperty("pj", "circle-radius", t === "metro" ? 4 : 6);
@@ -490,13 +492,23 @@ async function boot() {
     map.addSource("ls", {type: "geojson", data: FC(D.list.map(l => ({type: "Feature", properties: {p: l[2], s: l[3], n: l[4] || ""}, geometry: {type: "Point", coordinates: [l[1], l[0]]}})))});
     map.addLayer({id: "ls", type: "circle", source: "ls", paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 1.6, 15, 4.5], "circle-color": ramp("p", PRICE_STOPS, PRICE_COL), "circle-stroke-color": "#3b2a14", "circle-stroke-width": .6}});
     // dự án
-    const pf = D.prj.projects.map(p => ({type: "Feature", properties: {id: p.id, n: p.n, c: devOf(p).c, d: devOf(p).n, dv: p.d}, geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}}));
+    const pf = D.prj.projects.map((p, i) => ({type: "Feature", properties: {id: p.id, n: p.n, c: devOf(p).c, d: devOf(p).n, dv: p.d, k: p.a ? 1000 + i : i}, geometry: {type: "Point", coordinates: [p.ll[1], p.ll[0]]}}));
     map.addSource("pjp", {type: "geojson", data: FC(D.prj.projects.filter(p => p.poly).map(p => ({type: "Feature", properties: {id: p.id, c: devOf(p).c, dv: p.d}, geometry: p.poly})))});
     map.addLayer({id: "pjp-f", type: "fill", source: "pjp", paint: {"fill-color": ["get", "c"], "fill-opacity": .12}}, first);
     map.addLayer({id: "pjp-l", type: "line", source: "pjp", paint: {"line-color": ["get", "c"], "line-width": 1.5, "line-opacity": .7}});
     map.addSource("pj", {type: "geojson", data: FC(pf)});
     map.addLayer({id: "pj", type: "circle", source: "pj", paint: {"circle-radius": 6, "circle-color": ["get", "c"], "circle-stroke-color": "#fff", "circle-stroke-width": 2}});
-    map.addLayer({id: "pj-t", type: "symbol", source: "pj", minzoom: 12.5, layout: {"text-field": ["get", "n"], "text-size": 11.5, "text-offset": [0, 1.1], "text-anchor": "top", "text-font": ["Noto Sans Regular"]}, paint: {"text-color": "#3b2a14", "text-halo-color": "#fff", "text-halo-width": 1.4}});
+    // tag tên dự án: viên thuốc màu theo logo CĐT, chữ trắng (kiểu web map Masterise)
+    const pill = fill => { const W = 72, H = 44, R = 22, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+      g.beginPath(); g.moveTo(R, 2); g.lineTo(W - R, 2); g.arc(W - R, H / 2, R - 2, -Math.PI / 2, Math.PI / 2); g.lineTo(R, H - 2); g.arc(R, H / 2, R - 2, Math.PI / 2, Math.PI * 1.5); g.closePath();
+      g.fillStyle = fill; g.fill(); return g.getImageData(0, 0, W, H); };
+    const popt = {pixelRatio: 2, stretchX: [[22, 50]], stretchY: [[20, 24]], content: [16, 6, 56, 38]};
+    Object.entries(D.prj.dev).forEach(([k, v]) => { if (!map.hasImage("pill-" + k)) map.addImage("pill-" + k, pill(v.c), popt); });
+    const tag = (id, extra, lay) => map.addLayer({id, type: "symbol", source: "pj", ...extra, layout: {"text-field": ["get", "n"], "text-font": ["Noto Sans Bold"], "text-size": 12.5,
+      "text-anchor": "left", "text-offset": [1.25, 0], "icon-image": ["concat", "pill-", ["get", "dv"]], "icon-text-fit": "both", "icon-text-fit-padding": [4, 10, 4, 10],
+      "text-max-width": 14, ...lay}, paint: {"text-color": "#ffffff"}});
+    tag("pj-t", {minzoom: 10.5}, {"symbol-sort-key": ["get", "k"]});
+    tag("pj-sel", {filter: ["==", ["get", "id"], ""]}, {"text-allow-overlap": true, "icon-allow-overlap": true, "text-ignore-placement": true, "icon-ignore-placement": true});
     // kết quả hỏi đáp
     map.addSource("hits", {type: "geojson", data: FC([])});
     map.addLayer({id: "hits", type: "circle", source: "hits", paint: {"circle-radius": 7, "circle-color": "#eca130", "circle-stroke-color": "#3b2a14", "circle-stroke-width": 2}});
@@ -506,7 +518,7 @@ async function boot() {
     setMode("p"); renderProjects(); setTab(state.tab); startOrbit(2.5);
     addAnchors();
     map.on("click", e => {
-      const f = map.queryRenderedFeatures(e.point, {layers: ["pj"]})[0];
+      const f = map.queryRenderedFeatures(e.point, {layers: ["pj", "pj-t", "pj-sel"].filter(l => map.getLayer(l))})[0];
       if (state.tab === "projects") { if (f) showProject(f.properties.id); return; }
       if (state.tab === "move") {
         if (state.pickMode === "to") { state.pickMode = null; $("#mvDest").value = "Điểm đã chọn trên bản đồ"; runRoute([e.lngLat.lng, e.lngLat.lat], "điểm đã chọn"); return; }
@@ -515,7 +527,7 @@ async function boot() {
       if (state.tab === "price") { if (f) { const [lon, lat] = f.geometry.coordinates; setPick(lat, lon, f.properties.n, "Chủ đầu tư: " + esc(f.properties.d), f.properties.id); } else setPick(e.lngLat.lat, e.lngLat.lng); }
       if (state.tab === "metro" && f) { setTab("projects"); showProject(f.properties.id); }
     });
-    for (const l of ["pj", "ls"]) { map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", l, () => map.getCanvas().style.cursor = ""); }
+    for (const l of ["pj", "ls", "pj-t", "pj-sel"]) { map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", l, () => map.getCanvas().style.cursor = ""); }
     var pop = new maplibregl.Popup({closeButton: false, offset: 10});
     map.on("mousemove", "ls", e => { const p = e.features[0].properties; pop.setLngLat(e.lngLat).setHTML(`<b>${fmt(+p.p)} triệu/m²</b> · ${p.s} m²${p.n ? `<br>${esc(p.n)}` : ""}`).addTo(map); });
     map.on("mousemove", "pj", e => { const p = e.features[0].properties; pop.setLngLat(e.lngLat).setHTML(`<b>${esc(p.n)}</b><br>${esc(p.d)}`).addTo(map); });

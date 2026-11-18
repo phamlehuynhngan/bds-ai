@@ -117,8 +117,28 @@ def locate(name, ct_name, addr):
     geo[name] = [round(float(r[0]["lat"]), 5), round(float(r[0]["lon"]), 5)]
     return geo[name], "nominatim"
 
+# Màu chủ đạo theo logo CĐT (tra 19/11/2026) — tô ghim + tag tên dự án. "?" = chưa xác minh được, chị kiểm lại.
+LOGO = {
+    "masterise": "#9a7642",   # vàng đồng (logo Masterise Homes)
+    "vin": "#213f7d",         # xanh navy + vàng kim (mô tả logo Vinhomes trên các trang thiết kế)
+    "khangdien": "#2f8a3e",   # chữ K hai mảng xanh dương – xanh lá
+    "phulong": "#2a62a8",     # ? chưa tìm được mô tả, giữ màu cũ
+    "namlong": "#9c0204",     # đỏ đô (phân tích ảnh logo Nam Long)
+    "sonkim": "#a8822f",      # ba dải vàng + chữ xanh than
+    "mik": "#001a71",         # xanh đậm #001A71 + đỏ #E20602
+    "novaland": "#1f8f4e",    # khối Rubik xanh lá (Báo Pháp Luật)
+    "hungthinh": "#c8102e",   # ? chưa xác minh
+    "datxanh": "#13294b",     # BLUEMARQ: navy đậm + vàng đồng
+    "phatdat": "#0b5aa6",     # ? chưa xác minh
+    "angia": "#e36c1e",       # ? chưa xác minh
+    "keppel": "#e51d37",      # đỏ — màu nhận diện chung của Keppel từ 3/2020
+    "capitaland": "#004289",  # xanh đậm (logo 2025)
+    "hkland": "#0d2940",      # xanh navy (Brandfetch)
+}
 data = json.load(open("docs/data/projects.json"))
 data["dev"].update(DEV)
+for k, c in LOGO.items():
+    if k in data["dev"]: data["dev"][k]["c"] = c
 pid = lambda d, n: d + "-" + re.sub(r"[^a-z0-9]+", "-", norm(n)).strip("-")
 new_ids = {pid(r[0], r[1]) for r in P}
 data["projects"] = [p for p in data["projects"] if p["d"] not in DEV and p["id"] not in new_ids]
