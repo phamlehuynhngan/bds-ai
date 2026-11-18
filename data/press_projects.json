@@ -1,0 +1,123 @@
+{
+ "found": [
+  {
+   "n": "Chateau Phú Mỹ Hưng",
+   "type": "thap",
+   "lat": 10.71401,
+   "lon": 106.72678,
+   "osm": "Đường số 23 Nội khu Chateau, Phường Tân Mỹ, Nhà Bè, Thành phố Hồ Chí Minh, 72916"
+  },
+  {
+   "n": "Biệt thự Phú Gia Phú Mỹ Hưng",
+   "type": "thap",
+   "lat": 10.72486,
+   "lon": 106.71423,
+   "osm": "Khu biệt thự Phú Gia, Khu phố 35, Phường Tân Hưng, Nhà Bè, Thành phố Hồ Chí Minh"
+  },
+  {
+   "n": "Evergreen Phú Mỹ Hưng",
+   "type": "thap",
+   "lat": 10.78767,
+   "lon": 106.69205,
+   "osm": "Khách Sạn Liên Phương, 261, Hai Bà Trưng, Khu phố 5, Phường Xuân Hòa, Thành phố "
+  },
+  {
+   "n": "Vạn Phúc City",
+   "type": "thap",
+   "lat": 10.7905,
+   "lon": 106.69381,
+   "osm": "Môi trường đô thị Thành phố Hồ Chí Minh, Hẻm 33 Lý Văn Phức, Khu phố 8, Phường T"
+  },
+  {
+   "n": "Sola Đảo Ánh Dương",
+   "type": "thap",
+   "lat": 10.7738,
+   "lon": 106.6563,
+   "osm": "Trường Trung học cơ sở - Trung học phổ thông Dân Lập Đào Duy Anh Cơ Sở 2, Hẻm 6 "
+  },
+  {
+   "n": "Villa Park",
+   "type": "thap",
+   "lat": 10.80271,
+   "lon": 106.79952,
+   "osm": "VILLA PARK, Phường Long Trường, Thành phố Hồ Chí Minh, 71213, Việt Nam"
+  },
+  {
+   "n": "Hausneo",
+   "type": "thap",
+   "lat": 10.80075,
+   "lon": 106.78879,
+   "osm": "Hausneo Apartment, 02, Phường Long Trường, Thành phố Hồ Chí Minh, 71213, Việt Na"
+  },
+  {
+   "n": "Đông Tăng Long",
+   "type": "thap",
+   "lat": 10.78149,
+   "lon": 106.70283,
+   "osm": "Bệnh viện Nhi đồng 2, 14, Lý Tự Trọng, Khu phố 2, Phường Sài Gòn, Thành phố Hồ C"
+  },
+  {
+   "n": "Thủ Đức Garden Homes",
+   "type": "thap",
+   "lat": 10.83841,
+   "lon": 106.71283,
+   "osm": "Thủ Đức Garden Homes, 27, Đường sổ 3, Khu phố 15, Phường Hiệp Bình, Thành phố "
+  },
+  {
+   "n": "Vinhomes Saigon Park",
+   "type": "thap",
+   "lat": 10.85552,
+   "lon": 106.84107,
+   "osm": "Cầu cạn Đường vành đai 3 Thành phố Hồ Chí Minh, Vinhomes Grand Park, Phường Long"
+  },
+  {
+   "n": "Senturia Nam Sài Gòn",
+   "type": "thap",
+   "lat": 10.7211,
+   "lon": 106.67051,
+   "osm": "Khu dân cư Senturia Nam Sài Gòn, Xã Bình Hưng, Thành phố Hồ Chí Minh, 71813, Việ"
+  },
+  {
+   "n": "Triton Crown Phú Mỹ Hưng",
+   "type": "cao",
+   "lat": 10.72519,
+   "lon": 106.72175,
+   "osm": "Triton Crown Phú Mỹ Hưng, Phường Tân Mỹ, Nhà Bè, Thành phố Hồ Chí Minh, 72916, V"
+  },
+  {
+   "n": "The Symphony Phú Mỹ Hưng",
+   "type": "cao",
+   "lat": 10.7239,
+   "lon": 106.72732,
+   "osm": "Chung cư Midtown - The Symphony, Phường Tân Mỹ, Nhà Bè, Thành phố Hồ Chí Minh, 7"
+  },
+  {
+   "n": "The Aurora Phú Mỹ Hưng",
+   "type": "cao",
+   "lat": 10.71766,
+   "lon": 106.72905,
+   "osm": "Chung cư The Aurora, Phường Tân Mỹ, Nhà Bè, Thành phố Hồ Chí Minh, 72916, Việt N"
+  }
+ ],
+ "missing": [
+  "Biệt thự Mỹ Văn Phú Mỹ Hưng",
+  "The Manhattan Glory Vinhomes Grand Park",
+  "Alta Villa The 9 Stellars",
+  "Jardin Villas Vạn Phúc City",
+  "Cielo Island",
+  "Hà Đô Villas",
+  "Essensia Parkway",
+  "The Solina",
+  "Sol Villas",
+  "Phố Đông Village",
+  "Saigon Mystery Villas",
+  "The Classia",
+  "Rio Vista",
+  "Gladia Heights",
+  "Happy One Elite",
+  "Trellia Vista",
+  "Legacy 66",
+  "The Regency Phú Mỹ Hưng",
+  "The Sculptura Phú Mỹ Hưng"
+ ]
+}

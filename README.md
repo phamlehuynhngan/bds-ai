@@ -9,6 +9,10 @@ python3 pipeline/collect_chotot.py     # tin rao -> data/raw_chotot.jsonl (~1 re
 python3 pipeline/fetch_poi_tiles.py    # tiện ích OSM -> data/poi.json
 python3 pipeline/train.py              # làm sạch, so sánh mô hình (+ đặc trưng giá dự án), SHAP -> docs/data/
 python3 pipeline/build_graph.py        # đồ thị đường OSM cho A*/Dijkstra -> docs/data/graph.bin.gz
+python3 pipeline/collect_projects.py   # tin rao có gắn dự án (căn hộ + nhà ở) -> data/raw_projects.jsonl
+python3 pipeline/press_projects.py     # dự án tìm qua batdongsan.com.vn, toạ độ Nominatim
+python3 pipeline/build_more_projects.py # -> docs/data/more_projects.json
+python3 pipeline/fetch_places.py       # tiện ích có tên (OSM) -> docs/data/places.json
 python3 pipeline/project_prices.py     # giá thị trường tham khảo từng dự án (Chợ Tốt + báo chí có nguồn)
 cp data/poi.json docs/data/poi.json
 ```

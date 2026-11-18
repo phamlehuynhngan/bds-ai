@@ -206,3 +206,4 @@ dialog .row button:last-child{padding:8px 16px;border-radius:999px;background:va
 .pj-actions .btn{margin-top:0;flex:1;justify-content:center;white-space:nowrap}
 .pj-actions .btn.ic{flex:0 0 auto}
 @media (max-width:820px){.pj-hero h2{font-size:19px}.pj-actions{bottom:-20px}}
+.more-h{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:18px 0 4px}
